@@ -208,6 +208,11 @@ class eventdetailsMetabox {
 			'id' => 'zoom_url',
 			'type' => 'url',
 		),
+		array(
+			'label' => 'Registrants',
+			'id' => 'registrants',
+			'type' => 'textarea',
+		),
 	);
 
 	public function __construct() {
@@ -235,6 +240,12 @@ class eventdetailsMetabox {
 
 	public function field_generator($post) {
 		$output = '';
+
+		// Setting field to readonly
+		if ($meta_field['id'] = "registrants") {
+			$attr = ' readonly';
+		}
+
 		foreach ($this->meta_fields as $meta_field) {
 			$label = '<label for="' . $meta_field['id'] . '">' . $meta_field['label'] . '</label>';
 			$meta_value = get_post_meta($post->ID, $meta_field['id'], true);
@@ -244,6 +255,14 @@ class eventdetailsMetabox {
 				}
 			}
 			switch ($meta_field['type']) {
+				case 'textarea':
+					$input = sprintf(
+						'<textarea style="width: 100%%" id="%s" name="%s" rows="5"' . $attr . '>%s</textarea>',
+						$meta_field['id'],
+						$meta_field['id'],
+						$meta_value
+					);
+					break;
 				default:
 					$input = sprintf(
 						'<input %s id="%s" name="%s" type="%s" value="%s">',
