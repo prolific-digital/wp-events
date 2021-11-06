@@ -203,6 +203,11 @@ class eventdetailsMetabox {
 			'id' => 'end_time',
 			'type' => 'time',
 		),
+		array(
+			'label' => 'Zoom URL',
+			'id' => 'zoom_url',
+			'type' => 'url',
+		),
 	);
 
 	public function __construct() {
