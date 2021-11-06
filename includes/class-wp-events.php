@@ -172,6 +172,9 @@ class Wp_Events {
 
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
+
+		$this->loader->add_filter('the_content', $plugin_public, 'display_start_date', 1);
+		$this->loader->add_filter('the_content', $plugin_public, 'display_end_date', 1);
 	}
 
 	/**

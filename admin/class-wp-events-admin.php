@@ -228,6 +228,16 @@ class eventdetailsMetabox {
 			'id' => 'end_date',
 			'type' => 'text',
 		),
+		array(
+			'label' => 'Start Time',
+			'id' => 'start_time',
+			'type' => 'time',
+		),
+		array(
+			'label' => 'End Time',
+			'id' => 'end_time',
+			'type' => 'time',
+		),
 	);
 
 	public function __construct() {

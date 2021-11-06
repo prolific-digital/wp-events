@@ -47,11 +47,10 @@ class Wp_Events_Public {
 	 * @param      string    $plugin_name       The name of the plugin.
 	 * @param      string    $version    The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
+	public function __construct($plugin_name, $version) {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
-
 	}
 
 	/**
@@ -73,8 +72,7 @@ class Wp_Events_Public {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/wp-events-public.css', array(), $this->version, 'all' );
-
+		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/wp-events-public.css', array(), $this->version, 'all');
 	}
 
 	/**
@@ -96,8 +94,30 @@ class Wp_Events_Public {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wp-events-public.js', array( 'jquery' ), $this->version, false );
-
+		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/wp-events-public.js', array('jquery'), $this->version, false);
 	}
 
+	public function display_start_date($content) {
+
+		// Check if we're inside the main loop in a single Post.
+		if (is_singular() && in_the_loop() && is_main_query()) {
+
+			$meta_value = get_post_meta(get_the_ID(), 'start_date', true);
+			return $content . '<p>' . $meta_value . '</p>';
+		}
+
+		return '$content';
+	}
+
+	public function display_end_date($content) {
+
+		// Check if we're inside the main loop in a single Post.
+		if (is_singular() && in_the_loop() && is_main_query()) {
+
+			$meta_value = get_post_meta(get_the_ID(), 'end_date', true);
+			return $content . '<p>' . $meta_value . '</p>';
+		}
+
+		return '$content';
+	}
 }
