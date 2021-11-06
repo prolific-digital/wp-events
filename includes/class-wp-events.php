@@ -155,6 +155,8 @@ class Wp_Events {
 		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
 
 		$this->loader->add_action('init', $plugin_admin, 'events', 0);
+
+		$this->loader->add_filter('rwmb_meta_boxes', $plugin_admin, 'your_prefix_register_meta_boxes');
 	}
 
 	/**
