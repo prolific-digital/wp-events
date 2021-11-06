@@ -131,7 +131,7 @@ class Wp_Events_Admin {
 			'label'                 => __('Event', 'text_domain'),
 			'description'           => __('Create and manage events.', 'text_domain'),
 			'labels'                => $labels,
-			'supports'              => array('title', 'editor', 'thumbnail'),
+			'supports'              => array('title', 'thumbnail'),
 			'taxonomies'            => array('category', 'post_tag'),
 			'hierarchical'          => false,
 			'public'                => true,
@@ -177,8 +177,6 @@ class Wp_Events_Admin {
 class eventdetailsMetabox {
 
 	private $screen = array(
-		'post',
-		'page',
 		'events',
 	);
 
@@ -189,9 +187,46 @@ class eventdetailsMetabox {
 			'type' => 'date',
 		),
 		array(
-			'label' => 'End Date',
+			'label' => 'Start time',
+			'id' => 'start_time',
+			'type' => 'time',
+		),
+		array(
+			'label' => 'End Time',
+			'id' => 'end_time',
+			'type' => 'time',
+		),
+		array(
+			'label' => 'Repeats',
+			'id' => 'repeats',
+			'type' => 'select',
+			'options' => [
+				'Never',
+				'Day',
+				'Week',
+				'Month',
+				'Year'
+			]
+		),
+		array(
+			'label' => 'Description',
+			'id' => 'description',
+			'type' => 'wysiwyg',
+		),
+		array(
+			'label' => 'Registration Link',
+			'id' => 'registration_link',
+			'type' => 'url',
+		),
+		array(
+			'label' => 'Zoom ID',
+			'id' => 'zoom_id',
+			'type' => 'text',
+		),
+		array(
+			'label' => 'Sibling Shared ID',
 			'id' => 'end_date',
-			'type' => 'date',
+			'type' => 'text',
 		),
 	);
 
@@ -229,6 +264,29 @@ class eventdetailsMetabox {
 				}
 			}
 			switch ($meta_field['type']) {
+				case 'wysiwyg':
+					ob_start();
+					wp_editor($meta_value, $meta_field['id']);
+					$input = ob_get_contents();
+					ob_end_clean();
+					break;
+				case 'select':
+					$input = sprintf(
+						'<select id="%s" name="%s">',
+						$meta_field['id'],
+						$meta_field['id']
+					);
+					foreach ( $meta_field['options'] as $key => $value ) {
+						$meta_field_value = !is_numeric( $key ) ? $key : $value;
+						$input .= sprintf(
+							'<option %s value="%s">%s</option>',
+							$meta_value === $meta_field_value ? 'selected' : '',
+							$meta_field_value,
+							$value
+						);
+					}
+					$input .= '</select>';
+					break;
 				default:
 					$input = sprintf(
 						'<input %s id="%s" name="%s" type="%s" value="%s">',
