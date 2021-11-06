@@ -108,4 +108,16 @@ class Wp_Events_Public {
 
 		return '$content';
 	}
+
+	public function display_end_date($content) {
+
+		// Check if we're inside the main loop in a single Post.
+		if (is_singular() && in_the_loop() && is_main_query()) {
+
+			$meta_value = get_post_meta(get_the_ID(), 'end_date', true);
+			return $content . '<p>' . $meta_value . '</p>';
+		}
+
+		return '$content';
+	}
 }
