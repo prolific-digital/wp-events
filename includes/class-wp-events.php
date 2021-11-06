@@ -67,7 +67,7 @@ class Wp_Events {
 	 * @since    1.0.0
 	 */
 	public function __construct() {
-		if ( defined( 'WP_EVENTS_VERSION' ) ) {
+		if (defined('WP_EVENTS_VERSION')) {
 			$this->version = WP_EVENTS_VERSION;
 		} else {
 			$this->version = '1.0.0';
@@ -78,7 +78,6 @@ class Wp_Events {
 		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
-
 	}
 
 	/**
@@ -103,27 +102,26 @@ class Wp_Events {
 		 * The class responsible for orchestrating the actions and filters of the
 		 * core plugin.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wp-events-loader.php';
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-wp-events-loader.php';
 
 		/**
 		 * The class responsible for defining internationalization functionality
 		 * of the plugin.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wp-events-i18n.php';
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-wp-events-i18n.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wp-events-admin.php';
+		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-wp-events-admin.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing
 		 * side of the site.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wp-events-public.php';
+		require_once plugin_dir_path(dirname(__FILE__)) . 'public/class-wp-events-public.php';
 
 		$this->loader = new Wp_Events_Loader();
-
 	}
 
 	/**
@@ -139,8 +137,7 @@ class Wp_Events {
 
 		$plugin_i18n = new Wp_Events_i18n();
 
-		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
-
+		$this->loader->add_action('plugins_loaded', $plugin_i18n, 'load_plugin_textdomain');
 	}
 
 	/**
@@ -152,11 +149,12 @@ class Wp_Events {
 	 */
 	private function define_admin_hooks() {
 
-		$plugin_admin = new Wp_Events_Admin( $this->get_plugin_name(), $this->get_version() );
+		$plugin_admin = new Wp_Events_Admin($this->get_plugin_name(), $this->get_version());
 
-		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_styles');
+		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
 
+		$this->loader->add_action('init', $plugin_admin, 'events', 0);
 	}
 
 	/**
@@ -168,11 +166,10 @@ class Wp_Events {
 	 */
 	private function define_public_hooks() {
 
-		$plugin_public = new Wp_Events_Public( $this->get_plugin_name(), $this->get_version() );
+		$plugin_public = new Wp_Events_Public($this->get_plugin_name(), $this->get_version());
 
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-
+		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
+		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
 	}
 
 	/**
@@ -214,5 +211,4 @@ class Wp_Events {
 	public function get_version() {
 		return $this->version;
 	}
-
 }
