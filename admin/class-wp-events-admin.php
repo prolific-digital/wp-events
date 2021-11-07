@@ -151,18 +151,6 @@ class Wp_Events_Admin {
 		register_post_type('events', $args);
 	}
 
-	// public function send_notification() {
-
-	// 	$post_id = get_the_ID();
-
-	// 	$to = get_post_meta($post_id, 'registrants', true);
-	// 	$subject = get_the_title($post_id);
-	// 	$body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
-	// 	$headers = array('Content-Type: text/html; charset=UTF-8');
-
-	// 	wp_mail($to, $subject, $body, $headers);
-	// }
-
 	public function send_mail($events, $subject) {
 		if ($events) {
 			foreach ($events as $event) {
@@ -216,25 +204,6 @@ class Wp_Events_Admin {
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Meta Box Class: Event Details
