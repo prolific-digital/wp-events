@@ -78,6 +78,7 @@ class Wp_Events {
 		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
+		$this->set_cron_jobs();
 	}
 
 	/**
