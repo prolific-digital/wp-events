@@ -178,11 +178,14 @@ function send_mail() {
 		'post_type' => 'events',
 		'post_status' => 'publish',
 		'posts_per_page' => -1,
-		'date_query' => array(
+		'meta_query' => array(
 			array(
-				'before' => '+1 week'
-			)
-		)
+				'key' => 'start_date',
+				'value' => date('Y-m-d', strtotime("+7 day")),
+				'type' => 'DATE',
+				'compare' => '=',
+			),
+		),
 	));
 
 	if ($events) {
@@ -214,8 +217,6 @@ function custom_cron_job() {
 	}
 }
 add_action('wp', 'custom_cron_job');
-
-
 
 
 
