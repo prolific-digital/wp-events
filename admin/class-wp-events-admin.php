@@ -151,26 +151,77 @@ class Wp_Events_Admin {
 		register_post_type('events', $args);
 	}
 
-	public function your_prefix_register_meta_boxes($meta_boxes) {
-		$prefix = '';
+	public function send_notification() {
 
-		$meta_boxes[] = [
-			'title'      => esc_html__('demo', 'online-generator'),
-			'id'         => 'untitled',
-			'post_types' => ['post', 'page'],
-			'context'    => 'normal',
-			'fields'     => [
-				[
-					'type' => 'text',
-					'name' => esc_html__('Text', 'online-generator'),
-					'id'   => $prefix . 'text_h91efbojoxf',
-				],
-			],
-		];
+		$post_id = get_the_ID();
 
-		return $meta_boxes;
+		$to = get_post_meta($post_id, 'registrants', true);
+		$subject = get_the_title($post_id);
+		$body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
+		$headers = array('Content-Type: text/html; charset=UTF-8');
+
+		wp_mail($to, $subject, $body, $headers);
 	}
 }
+
+
+
+
+
+
+// Scheduled Action Hook
+function send_mail() {
+
+	global $post;
+
+	$events = get_posts(array(
+		'post_type' => 'events',
+		'post_status' => 'publish',
+		'posts_per_page' => -1,
+		'date_query' => array(
+			array(
+				'before' => '+1 week'
+			)
+		)
+	));
+
+	if ($events) {
+		foreach ($events as $event) {
+			setup_postdata($post);
+
+			$post_id = $event->ID;
+
+			$to = get_post_meta($post_id, 'registrants', true);
+			// $subject = get_the_title($post_id);
+			$subject = 'Event is one week away!';
+			$body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
+			$headers = array('Content-Type: text/html; charset=UTF-8');
+
+			wp_mail($to, $subject, $body, $headers);
+		}
+		wp_reset_postdata();
+	}
+}
+add_action('send_mail', 'send_mail');
+
+
+
+
+// Schedule Cron Job Event
+function custom_cron_job() {
+	if (!wp_next_scheduled('send_mail')) {
+		wp_schedule_event(current_time('timestamp'), 'daily', 'send_mail');
+	}
+}
+add_action('wp', 'custom_cron_job');
+
+
+
+
+
+
+
+
 
 // Meta Box Class: Event Details
 // Get the field value: $metavalue = get_post_meta( $post_id, $field_id, true );
@@ -265,7 +316,7 @@ class eventdetailsMetabox {
 
 	public function field_generator($post) {
 		$output = '';
-
+		$attr = '';
 		// Setting field to readonly
 		if ($meta_field['id'] = "registrants") {
 			$attr = ' readonly';
@@ -287,6 +338,7 @@ class eventdetailsMetabox {
 						$meta_field['id'],
 						$meta_value
 					);
+					break;
 				case 'wysiwyg':
 					ob_start();
 					wp_editor($meta_value, $meta_field['id']);
