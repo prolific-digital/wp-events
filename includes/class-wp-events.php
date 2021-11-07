@@ -151,13 +151,12 @@ class Wp_Events {
 
 		$plugin_admin = new Wp_Events_Admin($this->get_plugin_name(), $this->get_version());
 
-		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_styles');
-		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
-
 		$this->loader->add_action('init', $plugin_admin, 'events', 0);
-
 		$this->loader->add_action('event_notification', $plugin_admin, 'notify_registrants');
 		$this->loader->add_action('wp', $plugin_admin, 'custom_cron_job');
+
+		$this->loader->add_action('add_meta_boxes', $plugin_admin, 'add_meta_boxes');
+		$this->loader->add_action('save_post', $plugin_admin, 'save_fields');
 	}
 
 	/**
