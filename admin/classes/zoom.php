@@ -12,16 +12,17 @@ class Zoom {
     protected $zoom_user_id;
 
     function __construct() {
-        $wp_events_settings_options = get_option( 'wp_events_settings_option_name' );
-        $this->api_key = $wp_events_settings_options['zoom_api_key_0'];
-        $this->api_secret = $wp_events_settings_options['zoom_api_secret_1'];
-        $this->zoom_user_id = $wp_events_settings_options['zoom_user_id_2'];
+        $settings_options = get_option('wp_events_settings_option_name');
+        $this->api_key = $settings_options['zoom_api_key_0'] ? $settings_options['zoom_api_key_0'] : "";
+        $this->api_secret = $settings_options['zoom_api_secret_1'] ? $settings_options['zoom_api_secret_1'] : "";
+        $this->zoom_user_id = $settings_options['zoom_user_id_2'] ? $settings_options['zoom_user_id_2'] : "";
         $payload = [
             "iss" => $this->api_key,
             "exp" => time() + 60
         ];
         $this->jwt = JWT::encode($payload, $this->api_secret);
     }
+
 
     /**
      * The above properties should be used to generate a JWT on every call.
@@ -85,31 +86,39 @@ class Zoom {
     public function getZoomEvents() {
         $events = [];
         $eventIds = [];
-        $meetings = json_decode($this->useApi("users/$this->zoom_user_id/meetings"), true)['meetings'];
-        $webinars = json_decode($this->useApi("users/$this->zoom_user_id/webinars"), true)['webinars'];
-        foreach ($meetings as $meeting) {
-            // Add every meeting to $events array
-            array_push($eventIds, $meeting["id"]);
-        }
-        foreach ($webinars as $webinar) {
-            // Add every webinar to $events array
-            array_push($eventIds, $webinar["id"]);
-        }
-        foreach ($eventIds as $id) {
-            $arr = [];
-            $data = json_decode($this->useApi("meetings/$id"));
-            // Check to see if meeting is webinar
-            if (strpos($data->message, "webinar")) {
-                $data = json_decode($this->useApi("webinars/$id"));
+        $response = json_decode($this->useApi("users/$this->zoom_user_id/meetings"), true);
+        $meetings = array_key_exists('meetings', $response) ? $response['meetings'] : false;
+        $webinars = array_key_exists('webinars', $response) ? $response['webinars'] : false;
+        if ($meetings) {
+            foreach ($meetings as $meeting) {
+                // Add every meeting to $events array
+                array_push($eventIds, $meeting["id"]);
             }
-            $arr['id'] =  $data->id;
-            $arr['start_time'] =  $data->start_time;
-            $arr['topic'] =  $data->topic;
-            $arr['join_url'] =  $data->join_url;
-            $arr['timezone'] =  $data->timezone;
-            $arr['agenda'] =  $data->agenda;
-            $arr['duration'] =  $data->duration;
-            array_push($events, $arr);
+        }
+        if ($webinars) {
+            foreach ($webinars as $webinar) {
+                // Add every webinar to $events array
+                array_push($eventIds, $webinar["id"]);
+            }
+        }
+        if (count($eventIds) > 0) {
+            foreach ($eventIds as $id) {
+                $arr = [];
+                $data = json_decode($this->useApi("meetings/$id"));
+                // Check to see if meeting is webinar
+                if (property_exists($data, "message")  && strpos($data->message, "webinar")) {
+                    $data = json_decode($this->useApi("webinars/$id"));
+                }
+
+                $arr['id'] =  property_exists($data, 'id') ? $data->id : "";
+                $arr['start_time'] =  property_exists($data, 'start_time') ? $data->start_time : "";
+                $arr['topic'] =  property_exists($data, 'topic') ? $data->topic : "";
+                $arr['join_url'] =  property_exists($data, 'join_url') ? $data->join_url : "";
+                $arr['timezone'] =  property_exists($data, 'timezone') ? $data->timezone : "";
+                $arr['agenda'] =  property_exists($data, 'agenda') ? $data->agenda : "";
+                $arr['duration'] =  property_exists($data, 'duration') ? $data->duration : "";
+                array_push($events, $arr);
+            }
         }
         return $events;
     }
@@ -121,14 +130,7 @@ class Zoom {
          * won't ever be in the millions, or even thousands,
          * so this should be fine from a computational POV.
          */
-        $query = new WP_Query(
-            [
-                'post_type' => 'event',
-                'posts_per_page' => -1,
-            ]
-        );
-
-        return $query->posts;
+        return get_posts('post_type=events');
     }
 
     public function insertNewEvents() {
@@ -174,7 +176,6 @@ class Zoom {
                     break;
                 }
             }
-
             // If the Meeting doesn't exist, create Event in DB.
             if (!$exists) {
                 $args = [
@@ -182,6 +183,7 @@ class Zoom {
                     'post_title' => $meeting['topic'],
                     'post_status' => 'publish',
                 ];
+                $wp_rewrite = new wp_rewrite;
                 $result = wp_insert_post($args);
                 /**
                  * Check that Event added successfully, then
@@ -213,7 +215,6 @@ class Zoom {
             $questions = json_decode($this->useApi("webinars/$meeting_id/registrants/questions"));
         }
         return $questions;
-
     }
 
 
