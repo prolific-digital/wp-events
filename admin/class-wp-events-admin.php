@@ -151,72 +151,85 @@ class Wp_Events_Admin {
 		register_post_type('events', $args);
 	}
 
-	public function send_notification() {
+	// public function send_notification() {
 
-		$post_id = get_the_ID();
+	// 	$post_id = get_the_ID();
 
-		$to = get_post_meta($post_id, 'registrants', true);
-		$subject = get_the_title($post_id);
-		$body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
-		$headers = array('Content-Type: text/html; charset=UTF-8');
+	// 	$to = get_post_meta($post_id, 'registrants', true);
+	// 	$subject = get_the_title($post_id);
+	// 	$body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
+	// 	$headers = array('Content-Type: text/html; charset=UTF-8');
 
-		wp_mail($to, $subject, $body, $headers);
-	}
-}
+	// 	wp_mail($to, $subject, $body, $headers);
+	// }
 
+	public function send_mail($events, $subject) {
+		if ($events) {
+			foreach ($events as $event) {
+				setup_postdata($post);
 
+				$post_id = $event->ID;
 
+				$to = get_post_meta($post_id, 'registrants', true);
+				// $subject = get_the_title($post_id);
+				// $subject = 'Event is one week away!';
+				$body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
+				$headers = array('Content-Type: text/html; charset=UTF-8');
 
-
-
-// Scheduled Action Hook
-function send_mail() {
-
-	global $post;
-
-	$events = get_posts(array(
-		'post_type' => 'events',
-		'post_status' => 'publish',
-		'posts_per_page' => -1,
-		'meta_query' => array(
-			array(
-				'key' => 'start_date',
-				'value' => date('Y-m-d', strtotime("+7 day")),
-				'type' => 'DATE',
-				'compare' => '=',
-			),
-		),
-	));
-
-	if ($events) {
-		foreach ($events as $event) {
-			setup_postdata($post);
-
-			$post_id = $event->ID;
-
-			$to = get_post_meta($post_id, 'registrants', true);
-			// $subject = get_the_title($post_id);
-			$subject = 'Event is one week away!';
-			$body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
-			$headers = array('Content-Type: text/html; charset=UTF-8');
-
-			wp_mail($to, $subject, $body, $headers);
+				wp_mail($to, $subject, $body, $headers);
+			}
+			wp_reset_postdata();
 		}
-		wp_reset_postdata();
+	}
+
+	public function get_events($time) {
+		global $post;
+
+		$args = array(
+			'post_type' => 'events',
+			'post_status' => 'publish',
+			'posts_per_page' => -1,
+			'meta_query' => array(
+				array(
+					'key' => 'start_date',
+					'type' => 'DATE',
+					'value' => date('Y-m-d', strtotime($time)),
+					'compare' => '=',
+				),
+			),
+		);
+
+		return $events = get_posts($args);
+	}
+
+	public function notify_registrants() {
+		$events = $this->get_events('+7 day');
+		$this->send_mail($events, '1 Week Away!');
+
+		$events = $this->get_events('+2 day');
+		$this->send_mail($events, '2 Days Away!');
+	}
+
+	public function custom_cron_job() {
+		if (!wp_next_scheduled('event_notification')) {
+			wp_schedule_event(current_time('timestamp'), 'daily', 'event_notification');
+		}
 	}
 }
-add_action('send_mail', 'send_mail');
 
 
 
 
-// Schedule Cron Job Event
-function custom_cron_job() {
-	if (!wp_next_scheduled('send_mail')) {
-		wp_schedule_event(current_time('timestamp'), 'daily', 'send_mail');
-	}
-}
-add_action('wp', 'custom_cron_job');
+
+
+
+
+
+
+
+
+
+
 
 
 
