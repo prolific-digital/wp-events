@@ -54,49 +54,14 @@ class Wp_Events_Admin {
 	}
 
 	/**
-	 * Register the stylesheets for the admin area.
+	 * Register the events custom post type.
+	 * 
+	 * @author  Chris Miller <chris@prolificdigital.com>
 	 *
-	 * @since    1.0.0
+	 * @since    0.0.1
+	 * 
+	 * @return void
 	 */
-	public function enqueue_styles() {
-
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Wp_Events_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Wp_Events_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
-		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/wp-events-admin.css', array(), $this->version, 'all');
-	}
-
-	/**
-	 * Register the JavaScript for the admin area.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_scripts() {
-
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Wp_Events_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Wp_Events_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
-		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/wp-events-admin.js', array('jquery'), $this->version, false);
-	}
-
 	public function events() {
 		$labels = array(
 			'name'                  => _x('Events', 'Post Type General Name', 'text_domain'),
@@ -151,6 +116,18 @@ class Wp_Events_Admin {
 		register_post_type('events', $args);
 	}
 
+	/**
+	 * Sends mail to all event registrants.
+	 * 
+	 * @author  Chris Miller <chris@prolificdigital.com>
+	 *
+	 * @since    0.0.1
+	 * 
+	 * @param array $events The array of events to loop over.
+	 * @param string $subject This subject line of the email.
+	 * 
+	 * @return void
+	 */
 	public function send_mail($events, $subject) {
 		if ($events) {
 			foreach ($events as $event) {
@@ -159,8 +136,6 @@ class Wp_Events_Admin {
 				$post_id = $event->ID;
 
 				$to = get_post_meta($post_id, 'registrants', true);
-				// $subject = get_the_title($post_id);
-				// $subject = 'Event is one week away!';
 				$body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
 				$headers = array('Content-Type: text/html; charset=UTF-8');
 
@@ -170,6 +145,17 @@ class Wp_Events_Admin {
 		}
 	}
 
+	/**
+	 * Retrieves all events from a specified date.
+	 * 
+	 * @author  Chris Miller <chris@prolificdigital.com>
+	 * 
+	 * @since    0.0.1
+	 * 
+	 * @param string $time Expects the +2 day format.
+	 * 
+	 * @return array
+	 */
 	public function get_events($time) {
 		global $post;
 
@@ -190,6 +176,13 @@ class Wp_Events_Admin {
 		return $events = get_posts($args);
 	}
 
+	/**
+	 * Notifies registrants of future events.
+	 * 
+	 * @author  Chris Miller <chris@prolificdigital.com>
+	 * 
+	 * @since    0.0.1
+	 */
 	public function notify_registrants() {
 		$events = $this->get_events('+7 day');
 		$this->send_mail($events, '1 Week Away!');
@@ -198,6 +191,13 @@ class Wp_Events_Admin {
 		$this->send_mail($events, '2 Days Away!');
 	}
 
+	/**
+	 * Creates a custom cron job for sending event notifications.
+	 * 
+	 * @author  Chris Miller <chris@prolificdigital.com>
+	 * 
+	 * @since    0.0.1
+	 */
 	public function custom_cron_job() {
 		if (!wp_next_scheduled('event_notification')) {
 			wp_schedule_event(current_time('timestamp'), 'daily', 'event_notification');
@@ -229,6 +229,11 @@ class eventdetailsMetabox {
 			'label' => 'End Time',
 			'id' => 'end_time',
 			'type' => 'time',
+		),
+		array(
+			'label' => 'Email notification?',
+			'id' => 'email_notification',
+			'type' => 'checkbox',
 		),
 		array(
 			'label' => 'Repeats',
@@ -314,6 +319,14 @@ class eventdetailsMetabox {
 				}
 			}
 			switch ($meta_field['type']) {
+				case 'checkbox':
+					$input = sprintf(
+						'<input %s id=" %s" name="%s" type="checkbox" value="1">',
+						$meta_value === '1' ? 'checked' : '',
+						$meta_field['id'],
+						$meta_field['id']
+					);
+					break;
 				case 'textarea':
 					$input = sprintf(
 						'<textarea style="width: 100%%" id="%s" name="%s" rows="5"' . $attr . '>%s</textarea>',
