@@ -23,7 +23,6 @@ class Zoom {
     $this->jwt = JWT::encode($payload, $this->api_secret);
   }
 
-
   /**
    * The above properties should be used to generate a JWT on every call.
    *
@@ -109,14 +108,28 @@ class Zoom {
         if (property_exists($data, "message")  && strpos($data->message, "webinar")) {
           $data = json_decode($this->useApi("webinars/$id"));
         }
-        $arr['id'] =  property_exists($data, 'id') ? $data->id : "";
-        $arr['start_time'] =  property_exists($data, 'start_time') ? $data->start_time : "";
-        $arr['topic'] =  property_exists($data, 'topic') ? $data->topic : "";
-        $arr['join_url'] =  property_exists($data, 'join_url') ? $data->join_url : "";
-        $arr['timezone'] =  property_exists($data, 'timezone') ? $data->timezone : "";
-        $arr['agenda'] =  property_exists($data, 'agenda') ? $data->agenda : "";
-        $arr['duration'] =  property_exists($data, 'duration') ? $data->duration : "";
-        array_push($events, $arr);
+        if (property_exists($data, 'occurrences')) {
+          foreach ($data->occurrences as $occurrence) {
+            $occurenceArr = [];
+            $occurenceArr['start_time'] =  property_exists($occurrence, 'start_time') ? $occurrence->start_time : "";
+            $occurenceArr['duration'] =  property_exists($occurrence, 'duration') ? $occurrence->duration : "";
+            $occurenceArr['id'] =  property_exists($occurrence, 'occurrence_id') ? $occurrence->occurrence_id : "";
+            $occurenceArr['topic'] =  property_exists($data, 'topic') ? $data->topic : "";
+            $occurenceArr['join_url'] =  property_exists($data, 'join_url') ? $data->join_url : "";
+            $occurenceArr['timezone'] =  property_exists($data, 'timezone') ? $data->timezone : "";
+            $occurenceArr['agenda'] =  property_exists($data, 'agenda') ? $data->agenda : "";
+            array_push($events, $occurenceArr);
+          }
+        } else {
+          $arr['start_time'] =  property_exists($data, 'start_time') ? $data->start_time : "";
+          $arr['duration'] =  property_exists($data, 'duration') ? $data->duration : "";
+          $arr['id'] =  property_exists($data, 'id') ? $data->id : "";
+          $arr['topic'] =  property_exists($data, 'topic') ? $data->topic : "";
+          $arr['join_url'] =  property_exists($data, 'join_url') ? $data->join_url : "";
+          $arr['timezone'] =  property_exists($data, 'timezone') ? $data->timezone : "";
+          $arr['agenda'] =  property_exists($data, 'agenda') ? $data->agenda : "";
+          array_push($events, $arr);
+        }
       }
     }
     return $events;
@@ -129,11 +142,17 @@ class Zoom {
      * won't ever be in the millions, or even thousands,
      * so this should be fine from a computational POV.
      */
-    return get_posts('post_type=events');
+    $query = new WP_Query(
+      [
+        'post_type' => 'events',
+        'posts_per_page' => -1,
+      ]
+    );
+
+    return $query->posts;
   }
 
   public function insertNewEvents() {
-    die(print_r(["TEST"]));
     $zoom_meetings = $this->getZoomEvents();
     $wp_events = $this->getDatabaseEvents();
     // Loop over every meeting from the Zoom API
@@ -157,7 +176,7 @@ class Zoom {
             $zoom = [
               'end_time' => !!$date_time[1] ? $date_time[1]->format('H:i:s') : "",
               'start_time' => !!$date_time[0] ? $date_time[0]->format('H:i:s') : "",
-              'start_date' => !!$date_time[0] ? $date_time[0]->format('Ymd') : ""
+              'start_date' => !!$date_time[0] ? $date_time[0]->format(get_option('date_format')) : ""
             ];
             if ($event->post_title != $meeting["topic"]) {
               wp_update_post(['ID' => $event->ID, 'post_title' => $meeting['topic']]);
@@ -169,13 +188,13 @@ class Zoom {
               update_post_meta($event->ID, 'registration_link', $meeting['join_url']);
             }
             if (get_post_field('start_date', $event->ID) != $zoom['start_date']) {
-              update_post_meta($event->ID, 'start_date', $meeting['start_date']);
+              update_post_meta($event->ID, 'start_date', $zoom['start_date']);
             }
             if (get_post_field('start_time', $event->ID) != $zoom['start_time']) {
-              update_post_meta($event->ID, 'start_time', $meeting['start_time']);
+              update_post_meta($event->ID, 'start_time', $zoom['start_time']);
             }
             if (get_post_field('end_time', $event->ID) != $zoom['end_time']) {
-              update_post_meta($event->ID, 'end_time', $meeting['end_time']);
+              update_post_meta($event->ID, 'end_time', $zoom['end_time']);
             }
             break;
           }
@@ -199,11 +218,10 @@ class Zoom {
           'zoom_url' => $meeting['join_url'],
           'end_time' => !!$date_time[1] ? $date_time[1]->format('H:i:s') : "",
           'start_time' => !!$date_time[0] ? $date_time[0]->format('H:i:s') : "",
-          'start_date' => !!$date_time[0] ? $date_time[0]->format('m/d/Y') : ""
+          'start_date' => !!$date_time[0] ? $date_time[0]->format(get_option('date_format')) : ""
         ];
         $result_id = wp_insert_post($args);
         $this->setPostMeta($result_id, $meta_args);
-        return;
       }
     }
     // $this->deleteNonExistentMeetings();
@@ -218,7 +236,7 @@ class Zoom {
   }
 
   public function getMeeting($meeting_id) {
-      return json_decode($this->useApi("meetings/$meeting_id"));
+    return json_decode($this->useApi("meetings/$meeting_id"));
   }
 
   public function getMeetingRegistrationQuestions($meeting_id) {
