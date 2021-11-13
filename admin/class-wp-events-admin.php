@@ -84,12 +84,17 @@ class Wp_Events_Admin {
 			'id' => 'repeats',
 			'type' => 'select',
 			'options' => [
-				'Never',
-				'Day',
-				'Week',
-				'Month',
-				'Year'
+				'never',
+				'day',
+				'week',
+				'month',
+				'year'
 			]
+		),
+		array(
+			'label' => 'Repeat ends on',
+			'id' => 'end_repeat',
+			'type' => 'date',
 		),
 		array(
 			'label' => 'Description',
@@ -107,8 +112,13 @@ class Wp_Events_Admin {
 			'type' => 'text',
 		),
 		array(
+			'label' => 'Parent ID',
+			'id' => 'parent_id',
+			'type' => 'text',
+		),
+		array(
 			'label' => 'Sibling Shared ID',
-			'id' => 'end_date',
+			'id' => 'sibling_shared_id',
 			'type' => 'text',
 		),
 		array(

@@ -121,6 +121,11 @@ class Wp_Events {
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'public/class-wp-events-public.php';
 
+		/**
+		 * The class responsible for recurring events.
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/classes/recurring-events.php';
+
 		$this->loader = new Wp_Events_Loader();
 	}
 
@@ -157,6 +162,11 @@ class Wp_Events {
 
 		$this->loader->add_action('add_meta_boxes', $plugin_admin, 'add_meta_boxes');
 		$this->loader->add_action('save_post', $plugin_admin, 'save_fields');
+
+		$recurring_events = new Recurring_Event();
+
+		$this->loader->add_action('save_post', $recurring_events, 'create_event');
+		// $this->loader->add_action('save_post', $recurring_events, 'update_series');
 	}
 
 	/**
