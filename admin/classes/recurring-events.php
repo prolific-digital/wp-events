@@ -50,7 +50,7 @@ class Recurring_Event {
     // The save_post action is triggered when deleting event — this prevents anything from happening.
     if (get_post_status($post_id) != 'trash') {
 
-      $uuid = get_post_meta($post_id, 'sibling_shared_id', true);
+      $uuid = get_post_meta($post_id, 'series_id', true);
 
       // Check to see if UUID is blank — if so, this will start a new event series.
       if (empty($uuid)) {
@@ -108,8 +108,8 @@ class Recurring_Event {
 
     update_post_meta($inserted_post_id, "start_date", $start_date);
 
-    update_post_meta($inserted_post_id, 'sibling_shared_id', $uuid);
-    update_post_meta($post_id, 'sibling_shared_id', $uuid);
+    update_post_meta($inserted_post_id, 'series_id', $uuid);
+    update_post_meta($post_id, 'series_id', $uuid);
 
     update_post_meta($inserted_post_id, 'parent_id', $post_id);
     update_post_meta($post_id, 'parent_id', $post_id);
@@ -123,14 +123,14 @@ class Recurring_Event {
     // update_post_meta($post->ID, 'description', get_field('description', $old_event_id), $new_event_id);
     // update_post_meta($post->ID, 'registration_link', get_field('registration_link', $old_event_id), $new_event_id);
     // update_post_meta($post->ID, 'zoom_id', get_field('zoom_id', $old_event_id), $new_event_id);
-    // update_post_meta($post->ID, 'sibling_shared_id', get_field('sibling_shared_id', $old_event_id), $new_event_id);
+    // update_post_meta($post->ID, 'series_id', get_field('series_id', $old_event_id), $new_event_id);
   }
 
 
   public function update_series($post_id) {
 
     // Checking to make sure there's an existing series.
-    $uuid = get_post_meta($post_id, 'sibling_shared_id', true);
+    $uuid = get_post_meta($post_id, 'series_id', true);
 
     if (!empty($uuid)) {
 
@@ -151,7 +151,7 @@ class Recurring_Event {
             'type' => 'DATE',
           ),
           array(
-            'key'     => 'sibling_shared_id',
+            'key'     => 'series_id',
             'value'   => $uuid,
             'compare' => '=',
           ),

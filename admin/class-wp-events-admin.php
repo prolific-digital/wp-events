@@ -117,8 +117,8 @@ class Wp_Events_Admin {
 			'type' => 'text',
 		),
 		array(
-			'label' => 'Sibling Shared ID',
-			'id' => 'sibling_shared_id',
+			'label' => 'Series ID',
+			'id' => 'series_id',
 			'type' => 'text',
 		),
 		array(
