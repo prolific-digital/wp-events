@@ -107,10 +107,11 @@ class Recurring_Event {
 
     if (!empty($uuid)) {
 
-      $start_date = get_post_meta($post_id, 'start_date', true);
-      $end_series = get_post_meta($post_id, 'end_series', true);
-      $repeats = get_post_meta($post_id, 'repeats', true);
-      $event_series = $this->get_event_series($start_date, $end_series, $repeats);
+      // Getting all of the field data from the post.
+      $post_meta = $this->get_fields($post_id);
+
+      // Creating an array with the recurring dates.
+      $event_series = $this->get_event_series($post_meta['start_date'], $post_meta['end_series'], $post_meta['repeats']);
 
       $args = array(
         'post_type' => 'events',
@@ -122,7 +123,7 @@ class Recurring_Event {
           'relation' => 'AND',
           array(
             'key'     => 'start_date',
-            'value'   => $start_date,
+            'value'   => $post_meta['start_date'],
             'compare' => '>=',
             'type' => 'DATE',
           ),
@@ -172,27 +173,30 @@ class Recurring_Event {
 
   function update_fields($post_id, $inserted_post_id, $start_date, $uuid) {
 
-    $parent_id = get_post_meta($inserted_post_id, 'parent_id');
-
-    // $end_recurring = get_post_meta($post->ID, 'ends', true);
-
-    update_post_meta($inserted_post_id, "start_date", $start_date);
-
-    update_post_meta($inserted_post_id, 'series_id', $uuid);
-    update_post_meta($post_id, 'series_id', $uuid);
-
-    update_post_meta($inserted_post_id, 'parent_id', $post_id);
+    // Associate the series by adding the originating ID (parent ID) and the UUID (series ID).
     update_post_meta($post_id, 'parent_id', $post_id);
+    update_post_meta($post_id, 'series_id', $uuid);
+    update_post_meta($inserted_post_id, 'parent_id', $post_id);
+    update_post_meta($inserted_post_id, 'series_id', $uuid);
 
-    // update_post_meta($post->ID, "start_date", $start_date, $new_event_id);
-    // update_post_meta($post->ID, 'start_time', get_field('start_time', $old_event_id), $new_event_id);
-    // update_post_meta($post->ID, 'end_time', get_field('end_time', $old_event_id), $new_event_id);
-    // update_post_meta($post->ID, 'recurring', get_field('recurring', $old_event_id), $new_event_id);
-    // update_post_meta($post->ID, 'which_days', get_field('which_days', $old_event_id), $new_event_id);
-    // update_post_meta($post->ID, 'ends', get_field('ends', $old_event_id), $new_event_id);
-    // update_post_meta($post->ID, 'description', get_field('description', $old_event_id), $new_event_id);
-    // update_post_meta($post->ID, 'registration_link', get_field('registration_link', $old_event_id), $new_event_id);
-    // update_post_meta($post->ID, 'zoom_id', get_field('zoom_id', $old_event_id), $new_event_id);
-    // update_post_meta($post->ID, 'series_id', get_field('series_id', $old_event_id), $new_event_id);
+    update_post_meta($inserted_post_id, 'start_date', $start_date);
+
+    // Getting all fields from the parent event.
+    $post_meta = $this->get_fields($post_id);
+
+    // Defining fields that we want to ignore.
+    $remove_fields = [
+      'start_date'
+    ];
+
+    foreach ($post_meta as $key => $value) {
+
+      // If we find a field that we want to ignore, skip it.
+      if (in_array($key, $remove_fields)) {
+        continue;
+      }
+
+      update_post_meta($inserted_post_id, $key, $value);
+    }
   }
 }
