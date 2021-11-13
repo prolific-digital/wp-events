@@ -165,8 +165,8 @@ class Wp_Events {
 
 		$recurring_events = new Recurring_Event();
 
+		$this->loader->add_action('save_post', $recurring_events, 'update_series');
 		$this->loader->add_action('save_post', $recurring_events, 'create_event');
-		$this->loader->add_action('edit_post', $recurring_events, 'update_series');
 	}
 
 	/**

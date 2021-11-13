@@ -85,15 +85,15 @@ class Wp_Events_Admin {
 			'type' => 'select',
 			'options' => [
 				'never',
-				'day',
-				'week',
-				'month',
-				'year'
+				'DAILY',
+				'WEEKLY',
+				'MONTHLY',
+				'YEARLY'
 			]
 		),
 		array(
-			'label' => 'Repeat ends on',
-			'id' => 'end_repeat',
+			'label' => 'Series ends on',
+			'id' => 'end_series',
 			'type' => 'date',
 		),
 		array(

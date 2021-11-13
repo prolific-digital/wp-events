@@ -13,32 +13,20 @@ use Ramsey\Uuid\Uuid;
 class Recurring_Event {
 
   function create_event($post_id) {
-
     $this->create_series($post_id);
-
-    /**
-     * Work in progress — need to find out why it changes 
-     * the date to the date when updating the post.
-     */
-    // $this->update_series($post_id);
-
     return $post_id;
   }
 
-  public function get_recurring_dates($start_date) {
-    $timezone    = 'America/New_York';
-    $startDate   = new \DateTime($start_date, new \DateTimeZone($timezone));
-    $endDate     = new \DateTime('2021-12-30 20:00:00', new \DateTimeZone($timezone)); // Optional
-    // $rule        = new \Recurr\Rule('FREQ=MONTHLY;COUNT=5', $startDate, $endDate, $timezone);
+  public function get_recurring_dates($start_date, $end_series, $repeats) {
 
     $rule = (new \Recurr\Rule)
-      ->setStartDate($startDate)
-      ->setTimezone($timezone)
-      ->setFreq('DAILY')
-      ->setByDay(['MO', 'TU'])
-      ->setUntil(new \DateTime('2021-11-31'));
+      ->setStartDate(new \DateTime($start_date))
+      ->setTimezone('America/New_York')
+      ->setFreq($repeats)
+      // ->setByDay(['MO', 'TU'])
+      ->setUntil(new \DateTime($end_series));
 
-    echo $rule->getString(); //FREQ=DAILY;UNTIL=20171231T000000;BYDAY=MO,TU
+    echo $rule->getString();
     $transformer = new \Recurr\Transformer\ArrayTransformer();
 
     $collection = $transformer->transform($rule);
@@ -60,8 +48,10 @@ class Recurring_Event {
         if ($recurring != "never" && $recurring != NULL) {
 
           $start_date = get_post_meta($post_id, 'start_date', true);
+          $end_series = get_post_meta($post_id, 'end_series', true);
+          $repeats = get_post_meta($post_id, 'repeats', true);
 
-          $collection = $this->get_recurring_dates($start_date);
+          $collection = $this->get_recurring_dates($start_date, $end_series, $repeats);
 
           // Creating a UUID for repeating events that require a relationship.
           $uuid = Uuid::uuid4()->toString();
@@ -77,9 +67,15 @@ class Recurring_Event {
 
           foreach ($collection as $key => $value) {
 
+            $start_date = $value->getStart();
+
+            if ($key == 0) {
+              update_post_meta($post_id, 'start_date', $start_date->format('Y-m-d'));
+              continue;
+            }
+
             $inserted_post_id = wp_insert_post($args);
 
-            $start_date = $value->getStart();
             $this->update_fields($post_id, $inserted_post_id, $start_date->format('Y-m-d'), $uuid);
           }
 
@@ -129,57 +125,62 @@ class Recurring_Event {
 
   public function update_series($post_id) {
 
-    // Checking to make sure there's an existing series.
-    $uuid = get_post_meta($post_id, 'series_id', true);
+    // The save_post action is triggered when deleting event — this prevents anything from happening.
+    if (get_post_status($post_id) != 'trash') {
 
-    if (!empty($uuid)) {
+      // Checking to make sure there's an existing series.
+      $uuid = get_post_meta($post_id, 'series_id', true);
 
-      $start_date = get_post_meta($post_id, 'start_date', true);
+      if (!empty($uuid)) {
 
-      $args = array(
-        'post_type' => 'events',
-        'posts_per_page' => -1,
-        'orderby' => 'meta_value_datetime',
-        'order' => 'ASC',
-        'meta_key'  => 'start_date',
-        'meta_query' => array(
-          'relation' => 'AND',
-          array(
-            'key'     => 'start_date',
-            'value'   => $start_date,
-            'compare' => '>=',
-            'type' => 'DATE',
+        $start_date = get_post_meta($post_id, 'start_date', true);
+        $end_series = get_post_meta($post_id, 'end_series', true);
+        $repeats = get_post_meta($post_id, 'repeats', true);
+        $collection = $this->get_recurring_dates($start_date, $end_series, $repeats);
+
+        $args = array(
+          'post_type' => 'events',
+          'posts_per_page' => -1,
+          'orderby' => 'meta_value_datetime',
+          'order' => 'ASC',
+          'meta_key'  => 'start_date',
+          'meta_query' => array(
+            'relation' => 'AND',
+            array(
+              'key'     => 'start_date',
+              'value'   => $start_date,
+              'compare' => '>=',
+              'type' => 'DATE',
+            ),
+            array(
+              'key'     => 'series_id',
+              'value'   => $uuid,
+              'compare' => '=',
+            ),
           ),
-          array(
-            'key'     => 'series_id',
-            'value'   => $uuid,
-            'compare' => '=',
-          ),
-        ),
-      );
+        );
 
-      $events = get_posts($args);
+        $events = get_posts($args);
 
-      $collection = $this->get_recurring_dates($start_date);
+        // Removing the hook to prevent an infinite loop.
+        remove_action('save_post', [$this, 'update_series']);
 
-      // Removing the hook to prevent an infinite loop.
-      remove_action('edit_post', [$this, 'update_series']);
+        foreach ($collection as $key => $value) {
 
-      foreach ($collection as $key => $value) {
+          wp_update_post([
+            'ID' => $events[$key]->ID,
+            'post_title' => get_the_title($post_id)
+          ]);
 
-        wp_update_post([
-          'ID' => $events[$key]->ID,
-          'post_title' => get_the_title($post_id)
-        ]);
+          $start_date = $value->getStart();
+          update_post_meta($events[$key]->ID, 'start_date', $start_date->format('Y-m-d'));
+        }
 
-        $start_date = $value->getStart();
-        update_post_meta($events[$key]->ID, 'start_date', $start_date->format('Y-m-d'));
+        // Adding the hook back.
+        add_action('save_post', [$this, 'update_series']);
       }
-
-      // Adding the hook back.
-      add_action('edit_post', [$this, 'update_series']);
     }
 
-    return;
+    return $post_id;
   }
 }
