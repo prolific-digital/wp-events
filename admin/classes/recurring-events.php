@@ -12,16 +12,25 @@ use Ramsey\Uuid\Uuid;
  */
 class Recurring_Event {
 
-  public function get_event_series($start_date, $end_series, $repeats, $repeats_on) {
+  public function get_event_series($post_id) {
 
-    $rule = (new \Recurr\Rule)
-      ->setStartDate(new \DateTime($start_date))
-      ->setTimezone('America/New_York')
-      ->setFreq($repeats)
-      ->setByDay($repeats_on)
-      ->setUntil(new \DateTime($end_series));
+    $post_meta = get_fields($post_id);
 
-    echo $rule->getString();
+    $args = array(
+      'FREQ' => $post_meta['series_repeat'],
+      'UNTIL' => $post_meta['end_series'],
+    );
+
+    if ($post_meta['repeats_on']) {
+      $days = implode(',', $post_meta['repeats_on']);
+      $args['BYDAY'] = $days;
+    }
+
+    $timezone    = 'America/New_York';
+    $startDate   = new \DateTime($post_meta['start_date'], new \DateTimeZone($timezone));
+    $rule        = new \Recurr\Rule($args, $startDate, $timezone);
+
+    // echo $rule->getString();
     $transformer = new \Recurr\Transformer\ArrayTransformer();
 
     $event_series = $transformer->transform($rule);
@@ -36,22 +45,20 @@ class Recurring_Event {
       return $post_id;
     }
 
-    $uuid = get_field('series_id', $post_id);
+    // Getting all of the field data from the post.
+    $post_meta = get_fields($post_id);
 
     // Check to see if UUID is blank — if so, this will start a new event series.
-    if (empty($uuid)) {
+    if (empty($post_meta['series_id'])) {
 
       // Checking to see if recurring events option is set.
-      $repeats = get_field('series_repeat', $post_id);
-      $repeats_on = get_field('repeats_on', $post_id);
+      // $repeats = get_field('series_repeat', $post_id);
+      // $repeats_on = get_field('repeats_on', $repeats);
 
-      if ($repeats) {
-
-        // Getting all of the field data from the post.
-        $post_meta = $this->get_fields($post_id);
+      if ($post_meta['series_repeat']) {
 
         // Creating an array with the recurring dates.
-        $event_series = $this->get_event_series($post_meta['start_date'], $post_meta['end_series'], $repeats, $repeats_on);
+        $event_series = $this->get_event_series($post_id);
 
         // Creating a UUID for recurring events — building a relationship.
         $uuid = Uuid::uuid4()->toString();
@@ -71,7 +78,7 @@ class Recurring_Event {
 
           // Assigning the first date in the series to the current post that's being edited.
           if ($key == 0) {
-            update_post_meta($post_id, 'start_date', $start_date->format('Y-m-d'));
+            update_field('start_date', $start_date->format('Y-m-d'), $post_id);
             continue;
           }
 
@@ -97,16 +104,15 @@ class Recurring_Event {
       return $post_id;
     }
 
-    // Checking to make sure there's an existing series.
-    $uuid = get_field('series_id', $post_id);
+    // Getting all of the field data from the post.
+    $post_meta = get_fields($post_id);
 
-    if (!empty($uuid)) {
-
-      // Getting all of the field data from the post.
-      $post_meta = $this->get_fields($post_id);
+    if (!empty($post_meta['series_id'])) {
 
       // Creating an array with the recurring dates.
-      $event_series = $this->get_event_series($post_meta['start_date'], $post_meta['end_series'], $post_meta['series_repeat'], $post_meta['repeats_on']);
+      $event_series = $this->get_event_series($post_id);
+
+      // die(var_dump($event_series));
 
       $args = array(
         'post_type' => 'events',
@@ -124,7 +130,7 @@ class Recurring_Event {
           ),
           array(
             'key'     => 'series_id',
-            'value'   => $uuid,
+            'value'   => $post_meta['series_id'],
             'compare' => '=',
           ),
         ),
@@ -132,18 +138,40 @@ class Recurring_Event {
 
       $events = get_posts($args);
 
+      // die(var_dump($events));
+      // die(var_dump($event_series));
+
       // Removing the hook to prevent an infinite loop.
       remove_action('save_post', [$this, 'update_series']);
 
+      foreach ($events as $key => $value) {
+        if ($value->ID != $post_meta['parent_id']) {
+          wp_delete_post($value->ID, true);
+        }
+      }
+
       foreach ($event_series as $key => $value) {
 
-        wp_update_post([
-          'ID' => $events[$key]->ID,
-          'post_title' => get_the_title($post_id)
-        ]);
-
         $start_date = $value->getStart();
-        update_post_meta($events[$key]->ID, 'start_date', $start_date->format('Y-m-d'));
+
+        if ($events[$key]->ID == $post_meta['parent_id']) {
+          wp_update_post([
+            'ID' => $events[$key]->ID,
+            'post_title' => get_the_title($post_id)
+          ]);
+          update_field('start_date', $start_date->format('Y-m-d'), $events[$key]->ID);
+        } else {
+          $args = [
+            'post_type' => 'events',
+            'post_status' => 'publish',
+            'post_title' => get_the_title($post_id)
+          ];
+          // Creating new posts — new post ID is being returned in the function below.
+          $inserted_post_id = wp_insert_post($args);
+
+          // Updating all fields to match across the series.
+          $this->update_fields($post_id, $inserted_post_id, $start_date->format('Y-m-d'), $post_meta['series_id']);
+        }
       }
 
       // Adding the hook back.
@@ -169,12 +197,12 @@ class Recurring_Event {
   function update_fields($post_id, $inserted_post_id, $start_date, $uuid) {
 
     // Associate the series by adding the originating ID (parent ID) and the UUID (series ID).
-    update_post_meta($post_id, 'parent_id', $post_id);
-    update_post_meta($post_id, 'series_id', $uuid);
-    update_post_meta($inserted_post_id, 'parent_id', $post_id);
-    update_post_meta($inserted_post_id, 'series_id', $uuid);
+    update_field('parent_id', $post_id, $post_id);
+    update_field('series_id', $uuid, $post_id);
+    update_field('parent_id', $post_id, $inserted_post_id);
+    update_field('series_id', $uuid, $inserted_post_id);
 
-    update_post_meta($inserted_post_id, 'start_date', $start_date);
+    update_field('start_date', $start_date, $inserted_post_id);
 
     // Getting all fields from the parent event.
     $post_meta = $this->get_fields($post_id);
