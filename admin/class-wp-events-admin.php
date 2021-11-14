@@ -1,5 +1,12 @@
 <?php
 
+// Define path and URL to the ACF plugin.
+define('MY_ACF_PATH', plugin_dir_path(__DIR__) .  '/vendor/acf/');
+define('MY_ACF_URL', plugin_dir_url(__DIR__) .  '/vendor/acf/');
+
+// Include the ACF plugin.
+include_once(MY_ACF_PATH . 'acf.php');
+
 /**
  * The admin-specific functionality of the plugin.
  *
@@ -51,6 +58,14 @@ class Wp_Events_Admin {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+	}
+
+	function my_acf_settings_url($url) {
+		return MY_ACF_URL;
+	}
+
+	function my_acf_settings_show_admin($show_admin) {
+		return true;
 	}
 
 	public function acf_read_only($field) {
