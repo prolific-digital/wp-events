@@ -160,14 +160,15 @@ class Wp_Events {
 		$this->loader->add_action('event_notification', $plugin_admin, 'notify_registrants');
 		$this->loader->add_action('wp', $plugin_admin, 'custom_cron_job');
 
-		$this->loader->add_action('add_meta_boxes', $plugin_admin, 'add_meta_boxes');
-		$this->loader->add_action('save_post', $plugin_admin, 'save_fields');
-
 		$recurring_events = new Recurring_Event();
 
 		// It's important that updating the event series comes before create them or an infinite loop will start.
 		$this->loader->add_action('save_post', $recurring_events, 'update_series');
 		$this->loader->add_action('save_post', $recurring_events, 'create_series');
+
+		$this->loader->add_filter('acf/load_field/name=series_id', $plugin_admin, 'acf_read_only');
+		$this->loader->add_filter('acf/load_field/name=parent_id', $plugin_admin, 'acf_read_only');
+		$this->loader->add_filter('acf/load_field/name=registrants', $plugin_admin, 'acf_read_only');
 	}
 
 	/**

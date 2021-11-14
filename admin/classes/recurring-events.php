@@ -12,20 +12,13 @@ use Ramsey\Uuid\Uuid;
  */
 class Recurring_Event {
 
-  function __construct() {
-    // The save_post action is triggered when deleting event — this prevents anything from happening.
-    if (get_post_status($post_id) != 'trash') {
-      return $post_id;
-    }
-  }
-
-  public function get_event_series($start_date, $end_series, $repeats) {
+  public function get_event_series($start_date, $end_series, $repeats, $repeats_on) {
 
     $rule = (new \Recurr\Rule)
       ->setStartDate(new \DateTime($start_date))
       ->setTimezone('America/New_York')
       ->setFreq($repeats)
-      // ->setByDay(['MO', 'TU'])
+      ->setByDay($repeats_on)
       ->setUntil(new \DateTime($end_series));
 
     echo $rule->getString();
@@ -43,20 +36,22 @@ class Recurring_Event {
       return $post_id;
     }
 
-    $uuid = get_post_meta($post_id, 'series_id', true);
+    $uuid = get_field('series_id', $post_id);
 
     // Check to see if UUID is blank — if so, this will start a new event series.
     if (empty($uuid)) {
 
       // Checking to see if recurring events option is set.
-      $repeats = get_post_meta($post_id, 'repeats', true);
-      if ($repeats != "never" && $repeats != NULL) {
+      $repeats = get_field('series_repeat', $post_id);
+      $repeats_on = get_field('repeats_on', $post_id);
+
+      if ($repeats) {
 
         // Getting all of the field data from the post.
         $post_meta = $this->get_fields($post_id);
 
         // Creating an array with the recurring dates.
-        $event_series = $this->get_event_series($post_meta['start_date'], $post_meta['end_series'], $post_meta['repeats']);
+        $event_series = $this->get_event_series($post_meta['start_date'], $post_meta['end_series'], $repeats, $repeats_on);
 
         // Creating a UUID for recurring events — building a relationship.
         $uuid = Uuid::uuid4()->toString();
@@ -103,7 +98,7 @@ class Recurring_Event {
     }
 
     // Checking to make sure there's an existing series.
-    $uuid = get_post_meta($post_id, 'series_id', true);
+    $uuid = get_field('series_id', $post_id);
 
     if (!empty($uuid)) {
 
@@ -111,7 +106,7 @@ class Recurring_Event {
       $post_meta = $this->get_fields($post_id);
 
       // Creating an array with the recurring dates.
-      $event_series = $this->get_event_series($post_meta['start_date'], $post_meta['end_series'], $post_meta['repeats']);
+      $event_series = $this->get_event_series($post_meta['start_date'], $post_meta['end_series'], $post_meta['series_repeat'], $post_meta['repeats_on']);
 
       $args = array(
         'post_type' => 'events',

@@ -1,6 +1,7 @@
 {
     "require": {
         "ramsey/uuid": "^4.2",
-        "simshaun/recurr": "^5.0"
+        "simshaun/recurr": "^5.0",
+        "htmlburger/carbon-fields": "^3.3"
     }
 }
