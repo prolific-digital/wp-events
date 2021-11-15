@@ -1,8 +1,8 @@
 <?php
 
 // Define path and URL to the ACF plugin.
-define('MY_ACF_PATH', plugin_dir_path(__DIR__) .  '/vendor/acf/');
-define('MY_ACF_URL', plugin_dir_url(__DIR__) .  '/vendor/acf/');
+define('MY_ACF_PATH', plugin_dir_path(__DIR__) .  '/includes/acf/');
+define('MY_ACF_URL', plugin_dir_url(__DIR__) .  '/includes/acf/');
 
 // Include the ACF plugin.
 include_once(MY_ACF_PATH . 'acf.php');
