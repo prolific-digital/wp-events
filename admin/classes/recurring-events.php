@@ -6,12 +6,21 @@ use Ramsey\Uuid\Uuid;
 /**
  * A class for handling the recurring events feature.
  *
- * @author Dalton McGee
  * @author Chris Miller
  * @since     0.0.1
  */
 class Recurring_Event {
 
+  /**
+   * Creates a recurring set of dates based on the recurr library.
+   *
+   * @author Chris Miller
+   * @since     0.0.1
+   * 
+   * @param integer $post_id The current post that's being edited.
+   * 
+   * @return array $event_series An array of recurring dates.
+   */
   public function get_event_series($post_id) {
 
     $post_meta = get_fields($post_id);
@@ -30,7 +39,6 @@ class Recurring_Event {
     $startDate   = new \DateTime($post_meta['start_date'], new \DateTimeZone($timezone));
     $rule        = new \Recurr\Rule($args, $startDate, $timezone);
 
-    // echo $rule->getString();
     $transformer = new \Recurr\Transformer\ArrayTransformer();
 
     $event_series = $transformer->transform($rule);
@@ -38,6 +46,16 @@ class Recurring_Event {
     return $event_series;
   }
 
+  /**
+   * Creates event posts based on a set of recurring rules.
+   *
+   * @author Chris Miller
+   * @since     0.0.1
+   * 
+   * @param integer $post_id The current post that's being edited.
+   * 
+   * @return integer $post_id Returns the edited post ID.
+   */
   public function create_series($post_id) {
 
     // The save_post action is triggered when deleting event — this prevents anything from happening.
@@ -51,10 +69,6 @@ class Recurring_Event {
     // Check to see if UUID is blank — if so, this will start a new event series.
     if (empty($post_meta['series_id'])) {
 
-      // Checking to see if recurring events option is set.
-      // $repeats = get_field('series_repeat', $post_id);
-      // $repeats_on = get_field('repeats_on', $repeats);
-
       if ($post_meta['series_repeat']) {
 
         // Creating an array with the recurring dates.
@@ -62,6 +76,12 @@ class Recurring_Event {
 
         // Creating a UUID for recurring events — building a relationship.
         $uuid = Uuid::uuid4()->toString();
+
+        update_field('parent_id', $post_id, $post_id);
+        update_field('series_id', $uuid, $post_id);
+
+        // Getting all fields from the parent event.
+        $post_meta = get_fields($post_id);
 
         $args = [
           'post_type' => 'events',
@@ -86,7 +106,7 @@ class Recurring_Event {
           $inserted_post_id = wp_insert_post($args);
 
           // Updating all fields to match across the series.
-          $this->update_fields($post_id, $inserted_post_id, $start_date->format('Y-m-d'), $uuid);
+          $this->update_fields($inserted_post_id, $post_meta, $start_date->format('Y-m-d'));
         }
 
         // Adding the hook back.
@@ -97,6 +117,17 @@ class Recurring_Event {
     return $post_id;
   }
 
+  /**
+   * Updates the event series when an edit occurrs, all events in the
+   * event series will be deleted and a new series will take its place.
+   *
+   * @author Chris Miller
+   * @since     0.0.1
+   * 
+   * @param integer $post_id The current post that's being edited.
+   * 
+   * @return integer $post_id Returns the edited post ID.
+   */
   public function update_series($post_id) {
 
     // The save_post action is triggered when deleting event — this prevents anything from happening.
@@ -111,8 +142,6 @@ class Recurring_Event {
 
       // Creating an array with the recurring dates.
       $event_series = $this->get_event_series($post_id);
-
-      // die(var_dump($event_series));
 
       $args = array(
         'post_type' => 'events',
@@ -137,9 +166,6 @@ class Recurring_Event {
       );
 
       $events = get_posts($args);
-
-      // die(var_dump($events));
-      // die(var_dump($event_series));
 
       // Removing the hook to prevent an infinite loop.
       remove_action('save_post', [$this, 'update_series']);
@@ -170,7 +196,7 @@ class Recurring_Event {
           $inserted_post_id = wp_insert_post($args);
 
           // Updating all fields to match across the series.
-          $this->update_fields($post_id, $inserted_post_id, $start_date->format('Y-m-d'), $post_meta['series_id']);
+          $this->update_fields($inserted_post_id, $post_meta, $start_date->format('Y-m-d'));
         }
       }
 
@@ -181,31 +207,21 @@ class Recurring_Event {
     return $post_id;
   }
 
-  public function get_fields($post_id) {
+  /**
+   * Updating all fields on newly created recurring events in the series.
+   *
+   * @author Chris Miller
+   * @since     0.0.1
+   * 
+   * @param integer $post_id The post ID of the newly inserted post.
+   * @param array $post_meta The parent post meta data.
+   * @param string $start_date The newly created start date from the recurring series.
+   * 
+   * @return void
+   */
+  function update_fields($post_id, $post_meta, $start_date) {
 
-    $post_meta = get_post_meta($post_id);
-
-    $fields = [];
-
-    foreach ($post_meta as $key => $value) {
-      $fields[$key] = $value[0];
-    }
-
-    return $fields;
-  }
-
-  function update_fields($post_id, $inserted_post_id, $start_date, $uuid) {
-
-    // Associate the series by adding the originating ID (parent ID) and the UUID (series ID).
-    update_field('parent_id', $post_id, $post_id);
-    update_field('series_id', $uuid, $post_id);
-    update_field('parent_id', $post_id, $inserted_post_id);
-    update_field('series_id', $uuid, $inserted_post_id);
-
-    update_field('start_date', $start_date, $inserted_post_id);
-
-    // Getting all fields from the parent event.
-    $post_meta = $this->get_fields($post_id);
+    update_field('start_date', $start_date, $post_id);
 
     // Defining fields that we want to ignore.
     $remove_fields = [
@@ -219,7 +235,7 @@ class Recurring_Event {
         continue;
       }
 
-      update_post_meta($inserted_post_id, $key, $value);
+      update_field($key, $value, $post_id);
     }
   }
 }

@@ -55,7 +55,6 @@ class Wp_Events_Admin {
 	 * @param      string    $version    The version of this plugin.
 	 */
 	public function __construct($plugin_name, $version) {
-
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 	}
@@ -144,8 +143,8 @@ class Wp_Events_Admin {
 	 *
 	 * @since    0.0.1
 	 * 
-	 * @param array $events The array of events to loop over.
-	 * @param string $subject This subject line of the email.
+	 * @param array 	$events 		The array of events to loop over.
+	 * @param string 	$subject 		This subject line of the email.
 	 * 
 	 * @return void
 	 */
