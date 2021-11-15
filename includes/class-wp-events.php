@@ -122,6 +122,11 @@ class Wp_Events {
 		require_once plugin_dir_path(dirname(__FILE__)) . 'public/class-wp-events-public.php';
 
 		/**
+		 * The fields that are responsible for the events interface.
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/fields/event-fields.php';
+
+		/**
 		 * The class responsible for recurring events.
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/classes/recurring-events.php';
