@@ -102,24 +102,7 @@ class Wp_Events_Public {
 		// Check if we're inside the main loop in a single Post.
 		if (is_singular() && in_the_loop() && is_main_query()) {
 
-			// Setting the order to be displayed.
-			$meta_fields = array(
-				'start_date',
-				'end_date',
-				'start_time',
-				'end_time',
-				'zoom_url',
-			);
-
-			// Getting all of the post meta.
-			$post_meta = get_post_meta(get_the_ID());
-
-			// Getting our post meta in the order we want it.
-			foreach ($meta_fields as $key => $val) {
-				if ($post_meta[$val][0]) {
-					echo '<p>' . $post_meta[$val][0] . '';
-				}
-			}
+			require_once plugin_dir_path(__DIR__) . 'public/partials/wp-events-public-display.php';
 
 			return $content;
 		}

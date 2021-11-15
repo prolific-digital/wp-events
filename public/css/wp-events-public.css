@@ -2,3 +2,24 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
+
+.btn {
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  padding: 10px 20px;
+  border: 1px solid #0074d9;
+  color: #0074d9;
+  text-align: center;
+  text-decoration: none;
+  transition: all 300ms ease-in-out;
+}
+
+.btn + .btn {
+  margin-top: 10px;
+}
+
+.btn:hover {
+  color: #fff;
+  background: #0074d9;
+}
