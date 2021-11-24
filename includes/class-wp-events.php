@@ -168,6 +168,7 @@ class Wp_Events {
 		$recurring_events = new Recurring_Event();
 
 		// It's important that updating the event series comes before create them or an infinite loop will start.
+		$this->loader->add_filter('post_updated', $recurring_events, 'get_previous_statuses');
 		$this->loader->add_action('save_post', $recurring_events, 'update_series');
 		$this->loader->add_action('save_post', $recurring_events, 'create_series');
 
