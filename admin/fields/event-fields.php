@@ -79,6 +79,7 @@ if (function_exists('acf_add_local_field_group')) :
         'type' => 'message',
         'instructions' => '',
         'required' => 0,
+        'message' => 'Meetings can only be set to repeat on creation. To change an event recurrence (e.g. weekly to monthly), create new series. You may want to delete the existing series.',
         'conditional_logic' => array(
           array(
             array(
@@ -93,7 +94,6 @@ if (function_exists('acf_add_local_field_group')) :
           'class' => '',
           'id' => '',
         ),
-        'message' => 'Updating an existing event series in any way will delete all items from the series and recreate them.',
         'new_lines' => 'wpautop',
         'esc_html' => 0,
       ),
@@ -104,7 +104,15 @@ if (function_exists('acf_add_local_field_group')) :
         'type' => 'select',
         'instructions' => '',
         'required' => 0,
-        'conditional_logic' => 0,
+        'conditional_logic' => array(
+          array(
+            array(
+              'field' => 'field_6190764c0f2fd',
+              'operator' => '==',
+              'value' => null,
+            ),
+          ),
+        ),
         'wrapper' => array(
           'width' => '33',
           'class' => '',
@@ -130,7 +138,7 @@ if (function_exists('acf_add_local_field_group')) :
         'label' => 'End Series',
         'name' => 'end_series',
         'type' => 'date_picker',
-        'instructions' => '',
+        'instructions' => 'If "End Series" is BEFORE the earliest event, all events in series will be deleted.',
         'required' => 1,
         'conditional_logic' => array(
           array(
@@ -142,7 +150,7 @@ if (function_exists('acf_add_local_field_group')) :
           ),
         ),
         'wrapper' => array(
-          'width' => '33',
+          'width' => '100',
           'class' => '',
           'id' => '',
         ),

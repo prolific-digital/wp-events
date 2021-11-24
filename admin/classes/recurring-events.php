@@ -230,6 +230,13 @@ class Recurring_Event {
       // Removing the hook to prevent an infinite loop.
       remove_action('save_post', [$this, 'update_series']);
 
+      // // Delete and recreate events when Series Repeat field is updated.
+      // if ($this->previous_series_repeat !== $post_meta['series_repeat']) {
+      //   foreach ($events as $event) {
+      //     wp_delete_post($event->ID);
+      //   }
+      // }
+
       if ($previous_end_series != null && $new_end_series > $previous_end_series) {
         $this->extend_series($post_id);
       } else {
