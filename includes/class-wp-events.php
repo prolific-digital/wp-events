@@ -131,6 +131,11 @@ class Wp_Events {
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/classes/recurring-events.php';
 
+		/**
+		 * The class responsible for incorporating zoom api.
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/classes/zoom.php';
+
 		$this->loader = new Wp_Events_Loader();
 	}
 
@@ -159,6 +164,9 @@ class Wp_Events {
 	 */
 	private function define_admin_hooks() {
 
+		// $zoom = new Zoom();
+		// $this->loader->add_action('create_events', $zoom, 'insertNewEvents');
+
 		$plugin_admin = new Wp_Events_Admin($this->get_plugin_name(), $this->get_version());
 
 		$this->loader->add_action('init', $plugin_admin, 'events', 0);
@@ -181,6 +189,29 @@ class Wp_Events {
 		$this->loader->add_filter('acf/load_field/name=series_id', $plugin_admin, 'acf_read_only');
 		$this->loader->add_filter('acf/load_field/name=parent_id', $plugin_admin, 'acf_read_only');
 		$this->loader->add_filter('acf/load_field/name=registrants', $plugin_admin, 'acf_read_only');
+	}
+
+		/**
+	 * Creates cron job for
+	 * of the plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function set_cron_jobs() {
+		// Creates new cron scheduler for fifteen minute intervals.
+		add_filter('cron_schedules', function ($schedules) {
+			$schedules['fifteen_minutes'] = array(
+				'interval' => 900,
+				'display'  => esc_html__('Every Fifteen Minutes'),
+			);
+			return $schedules;
+		});
+
+		// Set up CronJob for Creating new Zoom Events.
+		if (!wp_next_scheduled('create_events')) {
+			wp_schedule_event(time(), 'fifteen_minutes', 'create_events');
+		}
 	}
 
 	/**
