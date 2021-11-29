@@ -75,11 +75,11 @@ class Wp_Events_Admin {
 
 	/**
 	 * Register the events custom post type.
-	 * 
+	 *
 	 * @author  Chris Miller <chris@prolificdigital.com>
 	 *
 	 * @since    0.0.1
-	 * 
+	 *
 	 * @return void
 	 */
 	public function events() {
@@ -135,105 +135,4 @@ class Wp_Events_Admin {
 		);
 		register_post_type('events', $args);
 	}
-
-	/**
-	 * Sends mail to all event registrants.
-	 * 
-	 * @author  Chris Miller <chris@prolificdigital.com>
-	 *
-	 * @since    0.0.1
-	 * 
-	 * @param array 	$events 		The array of events to loop over.
-	 * @param string 	$subject 		This subject line of the email.
-	 * 
-	 * @return void
-	 */
-	public function send_mail($events, $subject) {
-		if ($events) {
-			foreach ($events as $event) {
-				setup_postdata($post);
-
-				$post_id = $event->ID;
-
-				$to = get_post_meta($post_id, 'registrants', true);
-				$body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
-				$headers = array('Content-Type: text/html; charset=UTF-8');
-
-				wp_mail($to, $subject, $body, $headers);
-			}
-			wp_reset_postdata();
-		}
-	}
-
-	/**
-	 * Retrieves all events from a specified date.
-	 * 
-	 * @author  Chris Miller <chris@prolificdigital.com>
-	 * 
-	 * @since    0.0.1
-	 * 
-	 * @param string $time Expects the +2 day format.
-	 * 
-	 * @return array
-	 */
-	public function get_events($time) {
-		global $post;
-
-		$args = array(
-			'post_type' => 'events',
-			'post_status' => 'publish',
-			'posts_per_page' => -1,
-			'meta_query' => array(
-				array(
-					'key' => 'start_date',
-					'type' => 'DATE',
-					'value' => date('Y-m-d', strtotime($time)),
-					'compare' => '=',
-				),
-			),
-		);
-
-		return $events = get_posts($args);
-	}
-
-	/**
-	 * Notifies registrants of future events.
-	 * 
-	 * @author  Chris Miller <chris@prolificdigital.com>
-	 * 
-	 * @since    0.0.1
-	 */
-	public function notify_registrants() {
-		$events = $this->get_events('+7 day');
-		$this->send_mail($events, '1 Week Away!');
-
-		$events = $this->get_events('+2 day');
-		$this->send_mail($events, '2 Days Away!');
-	}
-
-	/**
-	 * Creates a custom cron job for sending event notifications.
-	 * 
-	 * @author  Chris Miller <chris@prolificdigital.com>
-	 * 
-	 * @since    0.0.1
-	 */
-	public function custom_cron_job() {
-		if (!wp_next_scheduled('event_notification')) {
-			wp_schedule_event(current_time('timestamp'), 'daily', 'event_notification');
-		}
-	}
 }
-
-
-// Meta Box Class: Event Details
-// Get the field value: $metavalue = get_post_meta( $post_id, $field_id, true );
-// class eventdetailsMetabox {
-
-
-	
-// }
-
-// if (class_exists('eventdetailsMetabox')) {
-// 	new eventdetailsMetabox;
-// };

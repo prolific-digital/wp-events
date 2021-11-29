@@ -136,6 +136,11 @@ class Wp_Events {
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/classes/zoom.php';
 
+		/**
+		 * The class responsible for sending event notifications.
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/classes/event-notifications.php';
+
 		$this->loader = new Wp_Events_Loader();
 	}
 
@@ -168,10 +173,10 @@ class Wp_Events {
 		// $this->loader->add_action('create_events', $zoom, 'insertNewEvents');
 
 		$plugin_admin = new Wp_Events_Admin($this->get_plugin_name(), $this->get_version());
+		$event_notification = new EventNotifications();
 
 		$this->loader->add_action('init', $plugin_admin, 'events', 0);
-		$this->loader->add_action('event_notification', $plugin_admin, 'notify_registrants');
-		$this->loader->add_action('wp', $plugin_admin, 'custom_cron_job');
+		$this->loader->add_action('event_notification', $event_notification, 'notify_registrants');
 
 		$recurring_events = new Recurring_Event();
 
@@ -188,7 +193,7 @@ class Wp_Events {
 
 		$this->loader->add_filter('acf/load_field/name=series_id', $plugin_admin, 'acf_read_only');
 		$this->loader->add_filter('acf/load_field/name=parent_id', $plugin_admin, 'acf_read_only');
-		$this->loader->add_filter('acf/load_field/name=registrants', $plugin_admin, 'acf_read_only');
+		// $this->loader->add_filter('acf/load_field/name=registrants', $plugin_admin, 'acf_read_only');
 	}
 
 		/**
