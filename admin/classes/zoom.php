@@ -14,14 +14,16 @@ class Zoom {
 
   function __construct() {
     $settings_options = get_option('wp_events_settings_option_name');
-    $this->api_key = $settings_options['zoom_api_key_0'] ? $settings_options['zoom_api_key_0'] : "";
-    $this->api_secret = $settings_options['zoom_api_secret_1'] ? $settings_options['zoom_api_secret_1'] : "";
-    $this->zoom_user_id = $settings_options['zoom_user_id_2'] ? $settings_options['zoom_user_id_2'] : "";
+    $this->api_key = array_key_exists('zoom_api_key_0', $settings_options) ? $settings_options['zoom_api_key_0'] : "";
+    $this->api_secret = array_key_exists('zoom_api_secret_1', $settings_options) ? $settings_options['zoom_api_secret_1'] : "";
+    $zoom_user_email = array_key_exists('zoom_user_email_2', $settings_options) ? $settings_options['zoom_user_email_2'] : "";
+
     $payload = [
       "iss" => $this->api_key,
       "exp" => time() + 60
     ];
     $this->jwt = JWT::encode($payload, $this->api_secret);
+    $zoom_user_id = $this->getZoomUserId($zoom_user_email);
   }
 
   /**
@@ -63,6 +65,20 @@ class Zoom {
     }
   }
 
+  protected function getZoomUserId($userEmail) {
+    $ret = '';
+    if (!empty($userEmail)) {
+      $users = $this->getUsers();
+      foreach ($users->users as $user) {
+        if ($user->email == $userEmail) {
+          $ret = $user->id;
+          break;
+        }
+      }
+    }
+    return $ret;
+  }
+
   public function register_attendee($meeting_id, $json) {
     $api_call = $this->useApi("/meetings/$meeting_id/registrants", "POST", json_encode($json, JSON_UNESCAPED_SLASHES));
     if (strpos($api_call, "Registration has not been enabled for this meeting")) {
@@ -80,7 +96,7 @@ class Zoom {
   }
 
   public function getUsers() {
-    return $this->useApi('users');
+    return json_decode($this->useApi('users'));
   }
 
   public function getZoomEvents() {
@@ -272,7 +288,7 @@ class Zoom {
     return $registrants;
   }
 
-  protected function buildRegistrantsList($meeting_id, $occurrence_id=null, $next_page=null) {
+  protected function buildRegistrantsList($meeting_id, $occurrence_id = null, $next_page = null) {
     if (get_field('parent_id', $meeting_id)) {
       $occurrence_id = $meeting_id;
       $meeting_id = $parent_id;
@@ -286,7 +302,7 @@ class Zoom {
       $this->buildRegistrantsList($meeting_id, $registrants->next_page_token);
     }
     // Return list as a CSV
-    return implode(',',$registrantsEmails);
+    return implode(',', $registrantsEmails);
   }
 
   protected function deleteNonExistentMeetings() {
