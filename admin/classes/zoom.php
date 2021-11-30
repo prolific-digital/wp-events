@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author Dalton McGee
  */
@@ -108,12 +109,14 @@ class Zoom {
         if (property_exists($data, "message")  && strpos($data->message, "webinar")) {
           $data = json_decode($this->useApi("webinars/$id"));
         }
+        // Check to see if meeting is recurring
         if (property_exists($data, 'occurrences')) {
           foreach ($data->occurrences as $occurrence) {
             $occurenceArr = [];
             $occurenceArr['start_time'] =  property_exists($occurrence, 'start_time') ? $occurrence->start_time : "";
             $occurenceArr['duration'] =  property_exists($occurrence, 'duration') ? $occurrence->duration : "";
             $occurenceArr['id'] =  property_exists($occurrence, 'occurrence_id') ? $occurrence->occurrence_id : "";
+            $occurenceArr['parent_id'] = $id;
             $occurenceArr['topic'] =  property_exists($data, 'topic') ? $data->topic : "";
             $occurenceArr['join_url'] =  property_exists($data, 'join_url') ? $data->join_url : "";
             $occurenceArr['timezone'] =  property_exists($data, 'timezone') ? $data->timezone : "";
@@ -124,6 +127,7 @@ class Zoom {
           $arr['start_time'] =  property_exists($data, 'start_time') ? $data->start_time : "";
           $arr['duration'] =  property_exists($data, 'duration') ? $data->duration : "";
           $arr['id'] =  property_exists($data, 'id') ? $data->id : "";
+          $arr['parent_id'] =  property_exists($data, 'parent_id') ? $data->id : "";
           $arr['topic'] =  property_exists($data, 'topic') ? $data->topic : "";
           $arr['join_url'] =  property_exists($data, 'join_url') ? $data->join_url : "";
           $arr['timezone'] =  property_exists($data, 'timezone') ? $data->timezone : "";
@@ -181,20 +185,23 @@ class Zoom {
             if ($event->post_title != $meeting["topic"]) {
               wp_update_post(['ID' => $event->ID, 'post_title' => $meeting['topic']]);
             }
+            if (get_post_field('parent_id', $event->ID) != $meeting['parent_id']) {
+              update_field('parent_id', $meeting['parent_id'], $event->ID);
+            }
             if (get_post_field('description', $event->ID) != $meeting['agenda']) {
-              update_post_meta($event->ID, 'description', $meeting['agenda']);
+              update_field('description', $meeting['agenda'], $event->ID);
             }
             if (get_post_field('zoom_url', $event->ID) != $meeting['join_url']) {
-              update_post_meta($event->ID, 'registration_link', $meeting['join_url']);
+              update_field('registration_link', $meeting['join_url'], $event->ID);
             }
             if (get_post_field('start_date', $event->ID) != $zoom['start_date']) {
-              update_post_meta($event->ID, 'start_date', $zoom['start_date']);
+              update_field('start_date', $zoom['start_date'], $event->ID);
             }
             if (get_post_field('start_time', $event->ID) != $zoom['start_time']) {
-              update_post_meta($event->ID, 'start_time', $zoom['start_time']);
+              update_field('start_time', $zoom['start_time'], $event->ID);
             }
             if (get_post_field('end_time', $event->ID) != $zoom['end_time']) {
-              update_post_meta($event->ID, 'end_time', $zoom['end_time']);
+              update_field('end_time', $zoom['end_time'], $event->ID);
             }
             break;
           }
@@ -207,6 +214,14 @@ class Zoom {
         } else {
           $date_time = [false, false];
         }
+
+        // Check to see if date is before Today; if it is, skip.
+        if ($date_time[0]->format(get_option('date_format')) < date(get_option('date_format'))) {
+          continue;
+        }
+
+        $registrants = $this->buildRegistrantsList($meeting['id']);
+
         $args = [
           'post_type' => 'events',
           'post_title' => $meeting['topic'],
@@ -214,8 +229,10 @@ class Zoom {
         ];
         $meta_args = [
           'zoom_id' => $zoom_id,
+          'parent_id' => array_key_exists('parent_id', $meeting) ? $meeting['parent_id'] : '',
           'description' => $meeting['agenda'],
           'zoom_url' => $meeting['join_url'],
+          'registrants' => $registrants ? $registrants : '',
           'end_time' => !!$date_time[1] ? $date_time[1]->format('H:i:s') : "",
           'start_time' => !!$date_time[0] ? $date_time[0]->format('H:i:s') : "",
           'start_date' => !!$date_time[0] ? $date_time[0]->format(get_option('date_format')) : ""
@@ -224,13 +241,13 @@ class Zoom {
         $this->setPostMeta($result_id, $meta_args);
       }
     }
-    // $this->deleteNonExistentMeetings();
+    $this->deleteNonExistentMeetings();
     return true;
   }
 
   protected function setPostMeta($post_id, $postarr) {
     foreach ($postarr as $key => $value) {
-      add_post_meta($post_id, $key, $value);
+      update_field($key, $value, $post_id);
     }
     return;
   }
@@ -241,12 +258,36 @@ class Zoom {
 
   public function getMeetingRegistrationQuestions($meeting_id) {
     $questions = json_decode($this->useApi("meetings/$meeting_id/registrants/questions"));
-    if (strpos($questions->message, "webinar")) {
+    if (property_exists($questions, "message") && strpos($questions->message, "webinar")) {
       $questions = json_decode($this->useApi("webinars/$meeting_id/registrants/questions"));
     }
     return $questions;
   }
 
+  protected function getMeetingRegistrants($meeting_id, $occurrence_id, $next_page) {
+    $registrants = json_decode($this->useApi("meetings/$meeting_id/registrants?occurrence_id=$occurrence_id&page_size=300&next_page=$next_page"));
+    if (property_exists($registrants, "message") && strpos($registrants->message, "webinar")) {
+      $registrants = json_decode($this->useApi("webinars/$meeting_id/registrants?occurrence_id=$occurrence_id&page_size=300&next_page=$next_page"));
+    }
+    return $registrants;
+  }
+
+  protected function buildRegistrantsList($meeting_id, $occurrence_id=null, $next_page=null) {
+    if (get_field('parent_id', $meeting_id)) {
+      $occurrence_id = $meeting_id;
+      $meeting_id = $parent_id;
+    }
+    $registrantsQuery = $this->getMeetingRegistrants($meeting_id, $occurrence_id, $next_page);
+    $registrantsEmails = [];
+    foreach ($registrantsQuery->registrants as $registrant) {
+      array_push($registrantsEmails, $registrant->email);
+    };
+    if ($registrantsQuery->next_page_token) {
+      $this->buildRegistrantsList($meeting_id, $registrants->next_page_token);
+    }
+    // Return list as a CSV
+    return implode(',',$registrantsEmails);
+  }
 
   protected function deleteNonExistentMeetings() {
     $zoom_meetings = $this->getZoomEvents();
