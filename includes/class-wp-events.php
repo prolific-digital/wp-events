@@ -142,6 +142,11 @@ class Wp_Events {
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/classes/event-notifications.php';
 
+		/**
+		 * The class responsible for sending event notifications.
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/classes/settings.php';
+
 		$this->loader = new Wp_Events_Loader();
 	}
 

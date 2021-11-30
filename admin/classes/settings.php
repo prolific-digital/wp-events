@@ -67,9 +67,9 @@ class WPEventsSettings {
 		);
 
 		add_settings_field(
-			'zoom_user_id_2', // id
-			'Zoom User ID', // title
-			array( $this, 'zoom_user_id_2_callback' ), // callback
+			'zoom_user_email_2', // id
+			'Zoom User Email', // title
+			array( $this, 'zoom_user_email_2_callback' ), // callback
 			'wp-events-settings-admin', // page
 			'wp_events_settings_setting_section' // section
 		);
@@ -85,8 +85,8 @@ class WPEventsSettings {
 			$sanitary_values['zoom_api_secret_1'] = sanitize_text_field( $input['zoom_api_secret_1'] );
 		}
 
-		if ( isset( $input['zoom_user_id_2'] ) ) {
-			$sanitary_values['zoom_user_id_2'] = sanitize_text_field( $input['zoom_user_id_2'] );
+		if ( isset( $input['zoom_user_email_2'] ) ) {
+			$sanitary_values['zoom_user_email_2'] = sanitize_text_field( $input['zoom_user_email_2'] );
 		}
 
 		return $sanitary_values;
@@ -110,14 +110,15 @@ class WPEventsSettings {
 		);
 	}
 
-	public function zoom_user_id_2_callback() {
+	public function zoom_user_email_2_callback() {
 		printf(
-			'<input class="regular-text" type="text" name="wp_events_settings_option_name[zoom_user_id_2]" id="zoom_user_id_2" value="%s">',
-			isset( $this->wp_events_settings_options['zoom_user_id_2'] ) ? esc_attr( $this->wp_events_settings_options['zoom_user_id_2']) : ''
+			'<input class="regular-text" type="text" name="wp_events_settings_option_name[zoom_user_email_2]" id="zoom_user_email_2" value="%s">',
+			isset( $this->wp_events_settings_options['zoom_user_email_2'] ) ? esc_attr( $this->wp_events_settings_options['zoom_user_email_2']) : ''
 		);
 	}
 
 }
+
 if ( is_admin() )
 	$wp_events_settings = new WPEventsSettings();
 
@@ -126,5 +127,5 @@ if ( is_admin() )
  * $wp_events_settings_options = get_option( 'wp_events_settings_option_name' ); // Array of All Options
  * $zoom_api_key_0 = $wp_events_settings_options['zoom_api_key_0']; // Zoom API Key
  * $zoom_api_secret_1 = $wp_events_settings_options['zoom_api_secret_1']; // Zoom API Secret
- * $zoom_user_id_2 = $wp_events_settings_options['zoom_user_id_2']; // Zoom User ID
+ * $zoom_user_email_2 = $wp_events_settings_options['zoom_user_email_2']; // Zoom User ID
  */
