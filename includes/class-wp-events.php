@@ -170,8 +170,8 @@ class Wp_Events {
 	 */
 	private function define_admin_hooks() {
 
-		// $zoom = new Zoom();
-		// $this->loader->add_action('create_events', $zoom, 'insertNewEvents');
+		$zoom = new Zoom();
+		$this->loader->add_action('create_events', $zoom, 'insertNewEvents');
 
 		$plugin_admin = new Wp_Events_Admin($this->get_plugin_name(), $this->get_version());
 		$event_notification = new EventNotifications();

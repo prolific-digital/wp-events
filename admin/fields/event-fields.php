@@ -84,8 +84,13 @@ if (function_exists('acf_add_local_field_group')) :
           array(
             array(
               'field' => 'field_61906f35eabe8',
-              'operator' => '!=',
-              'value' => '0',
+              'operator' => '!=empty',
+            ),
+          ),
+          array(
+            array(
+              'field' => 'field_619076240f2fb',
+              'operator' => '==empty',
             ),
           ),
         ),
@@ -107,9 +112,14 @@ if (function_exists('acf_add_local_field_group')) :
         'conditional_logic' => array(
           array(
             array(
-              'field' => 'field_6190764c0f2fd',
-              'operator' => '==',
-              'value' => null,
+              'field' => 'field_619076240f2fb',
+              'operator' => '==empty',
+            ),
+          ),
+          array(
+            array(
+              'field' => 'field_619076240f2fb',
+              'operator' => '==empty',
             ),
           ),
         ),
@@ -144,8 +154,13 @@ if (function_exists('acf_add_local_field_group')) :
           array(
             array(
               'field' => 'field_61906f35eabe8',
-              'operator' => '!=',
-              'value' => '0',
+              'operator' => '!=empty',
+            ),
+          ),
+          array(
+            array(
+              'field' => 'field_619076240f2fb',
+              'operator' => '==empty',
             ),
           ),
         ),
@@ -322,7 +337,6 @@ if (function_exists('acf_add_local_field_group')) :
         ),
         'default_value' => '',
         'placeholder' => '',
-        'rows' => '50',
       ),
     ),
     'location' => array(
