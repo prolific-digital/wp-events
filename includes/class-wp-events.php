@@ -191,18 +191,20 @@ class Wp_Events {
 		$this->loader->add_action('save_post', $recurring_events, 'update_series');
 		$this->loader->add_action('save_post', $recurring_events, 'create_series');
 
-		// Customize the url setting to fix incorrect asset URLs.
-		$this->loader->add_filter('acf/settings/url', $plugin_admin, 'my_acf_settings_url');
+		if (!class_exists('acf')) {
+			// Customize the url setting to fix incorrect asset URLs.
+			$this->loader->add_filter('acf/settings/url', $plugin_admin, 'my_acf_settings_url');
 
-		// (Optional) Hide the ACF admin menu item.
-		$this->loader->add_filter('acf/settings/show_admin', $plugin_admin, 'my_acf_settings_show_admin');
+			// (Optional) Hide the ACF admin menu item.
+			$this->loader->add_filter('acf/settings/show_admin', $plugin_admin, 'my_acf_settings_show_admin');
 
-		$this->loader->add_filter('acf/load_field/name=series_id', $plugin_admin, 'acf_read_only');
-		$this->loader->add_filter('acf/load_field/name=parent_id', $plugin_admin, 'acf_read_only');
-		// $this->loader->add_filter('acf/load_field/name=registrants', $plugin_admin, 'acf_read_only');
+			$this->loader->add_filter('acf/load_field/name=series_id', $plugin_admin, 'acf_read_only');
+			$this->loader->add_filter('acf/load_field/name=parent_id', $plugin_admin, 'acf_read_only');
+			// $this->loader->add_filter('acf/load_field/name=registrants', $plugin_admin, 'acf_read_only');
+		}
 	}
 
-		/**
+	/**
 	 * Creates cron job for
 	 * of the plugin.
 	 *

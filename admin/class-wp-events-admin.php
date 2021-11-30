@@ -5,8 +5,9 @@ define('MY_ACF_PATH', plugin_dir_path(__DIR__) .  '/includes/acf/');
 define('MY_ACF_URL', plugin_dir_url(__DIR__) .  '/includes/acf/');
 
 // Include the ACF plugin.
-include_once(MY_ACF_PATH . 'acf.php');
-
+if (!class_exists('acf')) {
+	include_once(MY_ACF_PATH . 'acf.php');
+}
 /**
  * The admin-specific functionality of the plugin.
  *
