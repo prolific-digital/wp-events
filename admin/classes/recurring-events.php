@@ -149,7 +149,7 @@ class Recurring_Event {
     // Update all the previously existing events
     foreach ($the_query->get_posts() as $event) {
       foreach ($post_meta as $field => $value) {
-        if (!in_array($field, ['registrants', 'start_date', 'series_repeat', 'repeats_on'])) {
+        if (!in_array($field, ['registrants', 'start_date', 'series_repeat', 'repeats_on', 'notify_registrants'])) {
           update_field($field, $value, $event->ID);
           wp_update_post(['post_title' => get_the_title($post_id), 'ID' => $event->ID]);
         }
@@ -247,7 +247,7 @@ class Recurring_Event {
             wp_delete_post($event->ID);
           } else {
             foreach ($post_meta as $field => $value) {
-              if (!in_array($field, ['registrants', 'start_date', 'series_repeat', 'repeats_on'])) {
+              if (!in_array($field, ['registrants', 'start_date', 'series_repeat', 'repeats_on', 'notify_registrants'])) {
                 update_field($field, $value, $event->ID);
                 wp_update_post(['post_title' => get_the_title($post_id), 'ID' => $event->ID]);
               }
