@@ -21,12 +21,14 @@ class EventNotifications {
 
         // If there are any registrants, send an email to them.
         if ($registrants) {
-          $to = explode(',',$registrants);
           $subject = $topic;
           $body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
-          $headers = array('Content-Type: text/html; charset=UTF-8');
-
-          $sent = wp_mail($to, $subject, $body, $headers);
+          $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+          );
+          foreach (explode(',', $registrants) as $recipient) {
+            wp_mail($recipient, $subject, $body, $headers);
+          }
         }
       }
     }
@@ -54,8 +56,10 @@ class EventNotifications {
 
     $ret = [];
     foreach ($events as $event) {
-      if (get_field('start_date', $event->ID) == date('Ymd', strtotime($time)) &&
-          get_field('notify_registrants', $event->ID)) {
+      if (
+        get_field('start_date', $event->ID) == date('Ymd', strtotime($time)) &&
+        get_field('notify_registrants', $event->ID)
+      ) {
         array_push($ret, $event);
       }
     }
