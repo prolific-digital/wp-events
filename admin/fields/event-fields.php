@@ -37,7 +37,7 @@ if (function_exists('acf_add_local_field_group')) :
           'id' => '',
         ),
         'display_format' => 'l, F j, Y',
-        'return_format' => 'Y-m-d',
+        'return_format' => 'Ymd',
         'first_day' => 1,
       ),
       array(
@@ -84,10 +84,9 @@ if (function_exists('acf_add_local_field_group')) :
           array(
             array(
               'field' => 'field_61906f35eabe8',
-              'operator' => '!=empty',
+              'operator' => '!=',
+              'value' => 'none',
             ),
-          ),
-          array(
             array(
               'field' => 'field_619076240f2fb',
               'operator' => '==empty',
@@ -129,7 +128,7 @@ if (function_exists('acf_add_local_field_group')) :
           'id' => '',
         ),
         'choices' => array(
-          0 => 'Does not repeat',
+          'none' => 'Does not repeat',
           'DAILY' => 'Daily',
           'WEEKLY' => 'Weekly',
           'MONTHLY' => 'Monthly',
@@ -149,15 +148,14 @@ if (function_exists('acf_add_local_field_group')) :
         'name' => 'end_series',
         'type' => 'date_picker',
         'instructions' => 'If "End Series" is BEFORE the earliest event, all events in series will be deleted.',
-        'required' => 1,
+        'required' => 0,
         'conditional_logic' => array(
           array(
             array(
               'field' => 'field_61906f35eabe8',
-              'operator' => '!=empty',
+              'operator' => '!=',
+              'value' => 'none',
             ),
-          ),
-          array(
             array(
               'field' => 'field_619076240f2fb',
               'operator' => '==empty',
@@ -170,7 +168,7 @@ if (function_exists('acf_add_local_field_group')) :
           'id' => '',
         ),
         'display_format' => 'l, F j, Y',
-        'return_format' => 'Y-m-d',
+        'return_format' => 'Ymd',
         'first_day' => 1,
       ),
       array(
@@ -236,7 +234,14 @@ if (function_exists('acf_add_local_field_group')) :
         'type' => 'url',
         'instructions' => '',
         'required' => 0,
-        'conditional_logic' => 0,
+        'conditional_logic' => array(
+          array(
+            array(
+              'field' => 'field_619076240f2fb',
+              'operator' => '==empty',
+            ),
+          )
+        ),
         'wrapper' => array(
           'width' => '',
           'class' => '',
@@ -271,7 +276,12 @@ if (function_exists('acf_add_local_field_group')) :
         'type' => 'url',
         'instructions' => '',
         'required' => 0,
-        'conditional_logic' => 0,
+        'conditional_logic' => array(array(
+          array(
+            'field' => 'field_619076240f2fb',
+            'operator' => '!=empty',
+          ),
+        )),
         'wrapper' => array(
           'width' => '',
           'class' => '',
