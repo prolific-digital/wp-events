@@ -176,15 +176,16 @@ class Wp_Events {
 	private function define_admin_hooks() {
 
 		$zoom = new Zoom();
-		$this->loader->add_action('create_events', $zoom, 'insertNewEvents');
-
 		$plugin_admin = new Wp_Events_Admin($this->get_plugin_name(), $this->get_version());
 		$event_notification = new EventNotifications();
-
-		$this->loader->add_action('init', $plugin_admin, 'events', 0);
-		$this->loader->add_action('event_notification', $event_notification, 'notify_registrants');
-
 		$recurring_events = new Recurring_Event();
+
+		// Register Events Post Type
+		$this->loader->add_action('init', $plugin_admin, 'events', 0);
+
+		// Create actions to run as Cron Jobs
+		$this->loader->add_action('notify_registrants', $event_notification, 'notify_registrants');
+		$this->loader->add_action('create_events', $zoom, 'insertNewEvents');
 
 		// It's important that updating the event series comes before create them or an infinite loop will start.
 		$this->loader->add_filter('post_updated', $recurring_events, 'get_previous_statuses');
@@ -225,6 +226,10 @@ class Wp_Events {
 		if (!wp_next_scheduled('create_events')) {
 			wp_schedule_event(time(), 'fifteen_minutes', 'create_events');
 		}
+
+		if (!wp_next_scheduled('notify_registrants')) {
+      wp_schedule_event(current_time('timestamp'), 'daily', 'notify_registrants');
+    }
 	}
 
 	/**
