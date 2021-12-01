@@ -44,7 +44,6 @@ class EventNotifications {
    * @return array
    */
   public function get_events($time) {
-    global $post;
     date_default_timezone_set('US/Central');
     $args = array(
       'post_type' => 'events',
@@ -52,9 +51,11 @@ class EventNotifications {
     );
 
     $events = (new WP_Query($args))->get_posts();
+
     $ret = [];
     foreach ($events as $event) {
-      if (get_field('start_date', $event->ID) == date('Y-m-d', strtotime($time))) {
+      if (get_field('start_date', $event->ID) == date('Ymd', strtotime($time)) &&
+          get_field('notify_registrants', $event->ID)) {
         array_push($ret, $event);
       }
     }
@@ -74,18 +75,5 @@ class EventNotifications {
 
     $two_day = $this->get_events('+2 day');
     $this->send_mail($two_day, '2 Days Away!');
-  }
-
-  /**
-   * Creates a custom cron job for sending event notifications.
-   *
-   * @author  Chris Miller <chris@prolificdigital.com>
-   *
-   * @since    0.0.1
-   */
-  public function send_event_notifications() {
-    if (!wp_next_scheduled('event_notification')) {
-      wp_schedule_event(current_time('timestamp'), 'daily', 'event_notification');
-    }
   }
 }
