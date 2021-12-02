@@ -186,7 +186,11 @@ class Wp_Events {
 		// Create actions to run as Cron Jobs
 		$this->loader->add_action('notify_registrants', $event_notification, 'notify_registrants');
 		$this->loader->add_action('create_events', $zoom, 'insertNewEvents');
-		$this->loader->add_action('gform_pre_submission', $recurring_events, 'add_registrants');
+		$this->loader->add_action('gform_pre_submission', $recurring_events, 'add_registrants_middleware');
+
+		// Create hooks for zoom registration
+		$this->loader->add_action('admin_post_zoom_registration', $zoom, 'register_zoom_attendee');
+		$this->loader->add_action('admin_post_nopriv_zoom_registration', $zoom, 'register_zoom_attendee');
 
 		// It's important that updating the event series comes before create them or an infinite loop will start.
 		$this->loader->add_filter('post_updated', $recurring_events, 'get_previous_statuses');
@@ -229,8 +233,8 @@ class Wp_Events {
 		}
 
 		if (!wp_next_scheduled('notify_registrants')) {
-      wp_schedule_event(current_time('timestamp'), 'daily', 'notify_registrants');
-    }
+			wp_schedule_event(current_time('timestamp'), 'daily', 'notify_registrants');
+		}
 	}
 
 	/**

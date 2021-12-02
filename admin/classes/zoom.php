@@ -327,4 +327,36 @@ class Zoom {
       }
     }
   }
+  function register_zoom_attendee() {
+    $keys = array_keys($_POST);;
+    $json = [
+      "custom_questions" => [],
+    ];
+    $meeting_id = $_POST["zoom_id"];
+    foreach ($keys as $key) {
+      if ($key != "action" && $key != "zoom_id" && $key != "confirmemail") {
+        $new_key = $key;
+        if ($key != "first_name" && $key != "last_name") {
+          $new_key = str_replace('_', ' ', $key);
+        }
+        if (strpos($new_key, "custom field-") === 0) {
+          $json["custom_questions"][] = [
+            "value" => $_POST[$key],
+            "title" => substr($new_key, 13)
+          ];
+        } else {
+          $json[$new_key] = $_POST[$key];
+        }
+      }
+    }
+    $response = $this->register_attendee($meeting_id, $json);
+    $json_response = json_decode($response);
+    $host  = $_SERVER['HTTP_HOST'];
+    if ($json_response != null) {
+      Recurring_Event::insert_registrants($_POST['email'], $meeting_id);
+      header("Location: http://$host/zoom-thank-you");
+    } else {
+      header("Location: http://$host/404.php");
+    }
+  }
 }
