@@ -229,7 +229,7 @@ class Wp_Events {
 		}
 
 		if (!wp_next_scheduled('notify_registrants')) {
-			wp_schedule_event(1638458640+3200, 'daily', 'notify_registrants');
+			wp_schedule_event(1638458640, 'daily', 'notify_registrants');
 		}
 	}
 
