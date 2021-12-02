@@ -21,8 +21,14 @@ class EventNotifications {
 
         // If there are any registrants, send an email to them.
         if ($registrants) {
+          $date = new DateTime(get_field('start_date', $post_id, true));
           $subject = $topic;
-          $body = '<h1>' . get_the_title($post_id) . '</h1>' . '<p class="start_date">Start Date: ' . get_post_meta($post_id, 'start_date', true) . '</p>' . '<p class="start_time">Start Time:' . get_post_meta($post_id, 'start_time', true) . '</p>' . get_post_meta($post_id, 'description', true) . '<a href="#">View Event</a>';
+          $body =
+          '<h1>' . get_the_title($post_id) . '</h1>' .
+          '<h2 class="start_date">' . $date->format("l F d, Y") . ' @ ' . get_field('start_time', $post_id, true) .'</h2>' .
+          '<p>' . get_field('description', $post_id, true) . '</p>' .
+          '<p><a href="' . get_permalink($post_id) . '">View Event</a></p>';
+
           $headers = array(
             'Content-Type: text/html; charset=UTF-8',
           );
