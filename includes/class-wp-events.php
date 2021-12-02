@@ -186,6 +186,7 @@ class Wp_Events {
 		// Create actions to run as Cron Jobs
 		$this->loader->add_action('notify_registrants', $event_notification, 'notify_registrants');
 		$this->loader->add_action('create_events', $zoom, 'insertNewEvents');
+		$this->loader->add_action('gform_pre_submission', $recurring_events, 'add_registrants');
 
 		// It's important that updating the event series comes before create them or an infinite loop will start.
 		$this->loader->add_filter('post_updated', $recurring_events, 'get_previous_statuses');
