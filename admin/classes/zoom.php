@@ -353,7 +353,7 @@ class Zoom {
     $json_response = json_decode($response);
     $host  = $_SERVER['HTTP_HOST'];
     if ($json_response != null) {
-      Recurring_Event::insert_registrants($_POST['email'], $meeting_id);
+      Recurring_Event::insert_registrants($_POST['email'], $_POST['post_id']);
       header("Location: http://$host/zoom-thank-you");
     } else {
       header("Location: http://$host/404.php");

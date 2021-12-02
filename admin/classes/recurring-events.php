@@ -314,16 +314,16 @@ class Recurring_Event {
     }
     $email = $_POST["input_$email_id"];
 
-    $this->insert_registrants($email, $post_id);
+    $this->insert_registrants($email, $_POST["input_$post_id"]);
     return;
   }
 
   static function insert_registrants($email, $post_id){
         // If there are not current registrants, set the variable to email.
         // If there are registrants, append email to the end.
-        $current_registrants = get_field('registrants', $_POST["input_$post_id"]);
+        $current_registrants = get_field('registrants', $post_id);
         $updated_registrants_csv =  empty($current_registrants) ? $email : "$current_registrants, $email";
-        update_field('registrants', $updated_registrants_csv);
+        update_field('registrants', $updated_registrants_csv, $post_id);
         return;
   }
 
