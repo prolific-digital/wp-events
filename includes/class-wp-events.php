@@ -203,10 +203,6 @@ class Wp_Events {
 
 			// (Optional) Hide the ACF admin menu item.
 			$this->loader->add_filter('acf/settings/show_admin', $plugin_admin, 'my_acf_settings_show_admin');
-
-			$this->loader->add_filter('acf/load_field/name=series_id', $plugin_admin, 'acf_read_only');
-			$this->loader->add_filter('acf/load_field/name=parent_id', $plugin_admin, 'acf_read_only');
-			// $this->loader->add_filter('acf/load_field/name=registrants', $plugin_admin, 'acf_read_only');
 		}
 	}
 
