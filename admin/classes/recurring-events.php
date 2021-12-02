@@ -297,7 +297,7 @@ class Recurring_Event {
     }
   }
 
-  public function add_registrants($form_data) {
+  public function add_registrants_middleware($form_data) {
     // Initialize variables;
     $email_id;
     $post_id;
@@ -312,15 +312,19 @@ class Recurring_Event {
         $post_id = $datum['id'];
       }
     }
-
-    // Get current registrants.
-    $current_registrants = get_field('registrants', $_POST["input_$post_id"]);
     $email = $_POST["input_$email_id"];
-    // If there are not current registrants, set the variable to email.
-    // If there are registrants, append email to the end.
-    $updated_registrants_csv =  empty($current_registrants) ? $email : "$current_registrants, $email";
-    update_field('registrants', $updated_registrants_csv);
+
+    $this->insert_registrants($email, $post_id);
     return;
+  }
+
+  static function insert_registrants($email, $post_id){
+        // If there are not current registrants, set the variable to email.
+        // If there are registrants, append email to the end.
+        $current_registrants = get_field('registrants', $_POST["input_$post_id"]);
+        $updated_registrants_csv =  empty($current_registrants) ? $email : "$current_registrants, $email";
+        update_field('registrants', $updated_registrants_csv);
+        return;
   }
 
   function get_previous_statuses($post_id) {
