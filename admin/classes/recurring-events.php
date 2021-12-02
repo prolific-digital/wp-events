@@ -297,6 +297,32 @@ class Recurring_Event {
     }
   }
 
+  public function add_registrants($form_data) {
+    // Initialize variables;
+    $email_id;
+    $post_id;
+
+    // Look through the form data for appropriate fields.
+    // If fields exist, set respective variables to the values.
+    foreach ($form_data['fields'] as $datum) {
+      if ($datum['label'] === "Email") {
+        $email_id = $datum['id'];
+      }
+      if ($datum['label'] === "post_id") {
+        $post_id = $datum['id'];
+      }
+    }
+
+    // Get current registrants.
+    $current_registrants = get_field('registrants', $_POST["input_$post_id"]);
+    $email = $_POST["input_$email_id"];
+    // If there are not current registrants, set the variable to email.
+    // If there are registrants, append email to the end.
+    $updated_registrants_csv =  empty($current_registrants) ? $email : "$current_registrants, $email";
+    update_field('registrants', $updated_registrants_csv);
+    return;
+  }
+
   function get_previous_statuses($post_id) {
     $this->previous_end_series = get_field("end_series", $post_id);
     $this->previous_repeats_on = get_field("repeats_on", $post_id);
