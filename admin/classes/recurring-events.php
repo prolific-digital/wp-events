@@ -11,7 +11,8 @@ use Ramsey\Uuid\Uuid;
  * @author Dalton McGee
  * @since     0.0.2
  */
-class Recurring_Event {
+class Recurring_Event
+{
 
   /**
    * Creates a recurring set of dates based on the recurr library.
@@ -31,7 +32,8 @@ class Recurring_Event {
   private $previous_repeats_on;
   private $previous_series_repeat;
 
-  public function get_event_series($post_id) {
+  public function get_event_series($post_id)
+  {
 
     $post_meta = get_fields($post_id);
 
@@ -47,11 +49,11 @@ class Recurring_Event {
       $args['BYDAY'] = $days;
     }
     if (array_key_exists('repeats_on_monthly', $post_meta) && $post_meta['repeats_on_monthly']) {
-      if($post_meta['repeats_on_monthly'] === "CUSTOM"){
+      if ($post_meta['repeats_on_monthly'] === "CUSTOM") {
         $days = $post_meta['repeats_on_monthly_custom'];
         $formatted_days = "";
         $day_of_week = $weekdays[date('w', strtotime($post_meta['start_date']))];
-        foreach ($days as $key => $day){
+        foreach ($days as $key => $day) {
           $arg = $day . $day_of_week . ',';
           if ($key === array_key_last($days)) $arg = $day . $day_of_week;
           $formatted_days .= $arg;
@@ -83,7 +85,8 @@ class Recurring_Event {
    *
    * @return integer $post_id Returns the edited post ID.
    */
-  public function create_series($post_id) {
+  public function create_series($post_id)
+  {
 
     // The save_post action is triggered when deleting event — this prevents anything from happening.
     if (in_array(get_post_status($post_id), ['trash', 'draft'])) {
@@ -93,58 +96,55 @@ class Recurring_Event {
     // Getting all of the field data from the post.
     $post_meta = get_fields($post_id);
 
-    // Check to see if UUID is blank — if so, this will start a new event series.
-    if (empty($post_meta['series_id'])) {
+    if (empty($post_meta['series_id']) && $post_meta['series_repeat'] &&  $post_meta['series_repeat'] !== 'none') {
 
-      if ($post_meta && $post_meta['series_repeat']) {
+      // Creating an array with the recurring dates.
+      $event_series = $this->get_event_series($post_id);
 
-        // Creating an array with the recurring dates.
-        $event_series = $this->get_event_series($post_id);
+      // Creating a UUID for recurring events — building a relationship.
+      $uuid = Uuid::uuid4()->toString();
 
-        // Creating a UUID for recurring events — building a relationship.
-        $uuid = Uuid::uuid4()->toString();
+      update_field('parent_id', $post_id, $post_id);
+      update_field('series_id', $uuid, $post_id);
 
-        update_field('parent_id', $post_id, $post_id);
-        update_field('series_id', $uuid, $post_id);
+      // Getting all fields from the parent event.
+      $post_meta = get_fields($post_id);
 
-        // Getting all fields from the parent event.
-        $post_meta = get_fields($post_id);
+      $args = [
+        'post_type' => 'events',
+        'post_status' => 'publish',
+        'post_title' => get_the_title($post_id)
+      ];
 
-        $args = [
-          'post_type' => 'events',
-          'post_status' => 'publish',
-          'post_title' => get_the_title($post_id)
-        ];
+      // Removing the hook temporarily to prevent an infinite loop.
+      remove_action('save_post', [$this, 'create_series']);
 
-        // Removing the hook temporarily to prevent an infinite loop.
-        remove_action('save_post', [$this, 'create_series']);
+      foreach ($event_series as $key => $value) {
 
-        foreach ($event_series as $key => $value) {
+        $start_date = $value->getStart();
 
-          $start_date = $value->getStart();
-
-          // Assigning the first date in the series to the current post that's being edited.
-          if ($key == 0) {
-            update_field('start_date', $start_date->format('Y-m-d'), $post_id);
-            continue;
-          }
-
-          // Creating new posts — new post ID is being returned in the function below.
-          $inserted_post_id = wp_insert_post($args);
-
-          // Updating all fields to match across the series.
-          $this->update_fields($inserted_post_id, $post_meta, $start_date->format('Y-m-d'));
+        // Assigning the first date in the series to the current post that's being edited.
+        if ($key == 0) {
+          update_field('start_date', $start_date->format('Y-m-d'), $post_id);
+          continue;
         }
 
-        // Adding the hook back.
-        add_action('save_post', [$this, 'create_series']);
+        // Creating new posts — new post ID is being returned in the function below.
+        $inserted_post_id = wp_insert_post($args);
+
+        // Updating all fields to match across the series.
+        $this->update_fields($inserted_post_id, $post_meta, $start_date->format('Y-m-d'));
       }
+
+      // Adding the hook back.
+      add_action('save_post', [$this, 'create_series']);
     }
 
     return $post_id;
   }
 
-  public function extend_series($post_id) {
+  public function extend_series($post_id)
+  {
 
     // The save_post action is triggered when deleting event — this prevents anything from happening.
     if (in_array(get_post_status($post_id), ['trash', 'draft'])) {
@@ -210,7 +210,8 @@ class Recurring_Event {
    *
    * @return integer $post_id Returns the edited post ID.
    */
-  public function update_series($post_id) {
+  public function update_series($post_id)
+  {
 
     // The save_post action is triggered when deleting event — this prevents anything from happening.
     if (in_array(get_post_status($post_id), ['trash', 'draft'])) {
@@ -292,7 +293,8 @@ class Recurring_Event {
    *
    * @return void
    */
-  function update_fields($post_id, $post_meta, $start_date) {
+  function update_fields($post_id, $post_meta, $start_date)
+  {
 
     update_field('start_date', $start_date, $post_id);
 
@@ -312,7 +314,8 @@ class Recurring_Event {
     }
   }
 
-  public function add_registrants_middleware($form_data) {
+  public function add_registrants_middleware($form_data)
+  {
     // Initialize variables;
     $email_id;
     $post_id;
@@ -333,16 +336,18 @@ class Recurring_Event {
     return;
   }
 
-  static function insert_registrants($email, $post_id){
-        // If there are not current registrants, set the variable to email.
-        // If there are registrants, append email to the end.
-        $current_registrants = get_field('registrants', $post_id);
-        $updated_registrants_csv =  empty($current_registrants) ? $email : "$current_registrants, $email";
-        update_field('registrants', $updated_registrants_csv, $post_id);
-        return;
+  static function insert_registrants($email, $post_id)
+  {
+    // If there are not current registrants, set the variable to email.
+    // If there are registrants, append email to the end.
+    $current_registrants = get_field('registrants', $post_id);
+    $updated_registrants_csv =  empty($current_registrants) ? $email : "$current_registrants, $email";
+    update_field('registrants', $updated_registrants_csv, $post_id);
+    return;
   }
 
-  function get_previous_statuses($post_id) {
+  function get_previous_statuses($post_id)
+  {
     $this->previous_end_series = get_field("end_series", $post_id);
     $this->previous_repeats_on = get_field("repeats_on", $post_id);
     $this->previous_series_repeat = get_field("series_repeat", $post_id);
