@@ -114,8 +114,6 @@ if (function_exists('acf_add_local_field_group')) :
               'field' => 'field_6190764c0f2fd',
               'operator' => '==empty',
             ),
-          ),
-          array(
             array(
               'field' => 'field_619076240f2fb',
               'operator' => '==empty',
