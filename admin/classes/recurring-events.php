@@ -40,9 +40,24 @@ class Recurring_Event {
       'UNTIL' => $post_meta['end_series'],
     );
 
-    if (array_key_exists('repeats_on', $post_meta) && $post_meta['repeats_on']) {
+    $weekdays = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+
+    if (array_key_exists('repeats_on_weekly', $post_meta) && $post_meta['repeats_on']) {
       $days = implode(',', $post_meta['repeats_on']);
       $args['BYDAY'] = $days;
+    }
+    if (array_key_exists('repeats_on_monthly', $post_meta) && $post_meta['repeats_on_monthly']) {
+      if($post_meta['repeats_on_monthly'] === "CUSTOM"){
+        $days = $post_meta['repeats_on_monthly_custom'];
+        $formatted_days = "";
+        $day_of_week = $weekdays[date('w', strtotime($post_meta['start_date']))];
+        foreach ($days as $key => $day){
+          $arg = $day . $day_of_week . ',';
+          if ($key === array_key_last($days)) $arg = $day . $day_of_week;
+          $formatted_days .= $arg;
+        }
+        $args['BYDAY'] = $formatted_days;
+      }
     }
 
     $timezone    = 'America/New_York';

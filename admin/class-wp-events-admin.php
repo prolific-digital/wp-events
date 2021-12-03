@@ -58,6 +58,7 @@ class Wp_Events_Admin {
 	public function __construct($plugin_name, $version) {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+		$this->define_hooks();
 	}
 
 	function my_acf_settings_url($url) {
@@ -72,6 +73,12 @@ class Wp_Events_Admin {
 		$field['readonly'] = 1;
 		$field['disabled'] = true;
 		return $field;
+	}
+
+	protected function define_hooks(){
+		add_action('acf/input/admin_enqueue_scripts', function(){
+			wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/wp-events-admin.js', array('jquery'), $this->version, false);
+		});
 	}
 
 	/**

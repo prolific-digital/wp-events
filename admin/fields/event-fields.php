@@ -143,38 +143,9 @@ if (function_exists('acf_add_local_field_group')) :
         'placeholder' => '',
       ),
       array(
-        'key' => 'field_619074b0cca49',
-        'label' => 'End Series',
-        'name' => 'end_series',
-        'type' => 'date_picker',
-        'instructions' => 'If "End Series" is BEFORE the earliest event, all events in series will be deleted.',
-        'required' => 0,
-        'conditional_logic' => array(
-          array(
-            array(
-              'field' => 'field_61906f35eabe8',
-              'operator' => '!=',
-              'value' => 'none',
-            ),
-            array(
-              'field' => 'field_619076240f2fb',
-              'operator' => '==empty',
-            ),
-          ),
-        ),
-        'wrapper' => array(
-          'width' => '100',
-          'class' => '',
-          'id' => '',
-        ),
-        'display_format' => 'l, F j, Y',
-        'return_format' => 'Ymd',
-        'first_day' => 1,
-      ),
-      array(
         'key' => 'field_619070e138d3a',
         'label' => 'Repeats on',
-        'name' => 'repeats_on',
+        'name' => 'repeats_on_weekly',
         'type' => 'checkbox',
         'instructions' => '',
         'required' => 0,
@@ -207,6 +178,102 @@ if (function_exists('acf_add_local_field_group')) :
         'toggle' => 1,
         'return_format' => 'value',
         'save_custom' => 0,
+      ),
+      array(
+        'key' => 'field_619070e138d3f',
+        'label' => 'Repeats on',
+        'name' => 'repeats_on_monthly',
+        'type' => 'radio',
+        'instructions' => '',
+        'required' => 0,
+        'conditional_logic' => array(
+          array(
+            array(
+              'field' => 'field_61906f35eabe8',
+              'operator' => '==',
+              'value' => 'MONTHLY',
+            ),
+          ),
+        ),
+        'wrapper' => array(
+          'width' => '',
+          'class' => '',
+          'id' => '',
+        ),
+        'choices' => array(
+          'DATE' => 'Same Date Every Month',
+          'CUSTOM' => 'Custom',
+        ),
+        'allow_custom' => 0,
+        'default_value' => array(),
+        'layout' => 'horizontal',
+        'toggle' => 0,
+        'return_format' => 'value',
+        'save_custom' => 0,
+      ),
+      array(
+        'key' => 'field_619070e138d40',
+        'label' => '',
+        'name' => 'repeats_on_monthly_custom',
+        'type' => 'checkbox',
+        'instructions' => '',
+        'required' => 1,
+        'conditional_logic' => array(
+          array(
+            array(
+              'field' => 'field_619070e138d3f',
+              'operator' => '==',
+              'value' => 'CUSTOM',
+            ),
+          ),
+        ),
+        'wrapper' => array(
+          'width' => '',
+          'class' => '',
+          'id' => '',
+        ),
+        'choices' => array(
+          '1' => '1st day of Month',
+          '2' => '2nd day of Month',
+          '3' => '3rd day of Month',
+          '4' => '4th day of Month',
+          '5' => '5th day of Month (if applicable)',
+        ),
+        'allow_custom' => 0,
+        'default_value' => array(),
+        'layout' => 'vertical',
+        'toggle' => 1,
+        'return_format' => 'value',
+        'save_custom' => 0,
+      ),
+      array(
+        'key' => 'field_619074b0cca49',
+        'label' => 'End Series',
+        'name' => 'end_series',
+        'type' => 'date_picker',
+        'instructions' => 'If "End Series" is BEFORE the earliest event, all events in series will be deleted.',
+        'required' => 1,
+        'conditional_logic' => array(
+          array(
+            array(
+              'field' => 'field_61906f35eabe8',
+              'operator' => '!=',
+              'value' => 'none',
+            ),
+            array(
+              'field' => 'field_619076240f2fb',
+              'operator' => '==empty',
+            ),
+          ),
+        ),
+        'wrapper' => array(
+          'width' => '100',
+          'class' => '',
+          'id' => '',
+        ),
+        'display_format' => 'l, F j, Y',
+        'return_format' => 'Ymd',
+        'first_day' => 1,
       ),
       array(
         'key' => 'field_6190758f45e86',
