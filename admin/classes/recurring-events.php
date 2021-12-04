@@ -243,25 +243,18 @@ class Recurring_Event {
       // Removing the hook to prevent an infinite loop.
       remove_action('save_post', [$this, 'update_series']);
 
-      // // Delete and recreate events when Series Repeat field is updated.
-      // if ($this->previous_series_repeat !== $post_meta['series_repeat']) {
-      //   foreach ($events as $event) {
-      //     wp_delete_post($event->ID);
-      //   }
-      // }
-
       if ($previous_end_series != null && $new_end_series > $previous_end_series) {
         $this->extend_series($post_id);
       } else {
         // Updates all events to match changes on all fields except:
         // [registrants, start_date, series_repeat, repeats_on]
         foreach ($events as $event) {
-          if ($new_end_series <= strtotime(get_field('start_date', $event->ID))) {
+          if (!get_field('zoom_id', $event->ID) && $new_end_series <= strtotime(get_field('start_date', $event->ID))) {
             wp_delete_post($event->ID);
           } else {
             $this->update_metadata_fields($post_id, $event->ID);
             foreach ($post_meta as $field => $value) {
-              if (!in_array($field, ['registrants', 'start_date', 'series_repeat', 'repeats_on', 'notify_registrants'])) {
+              if (!in_array($field, ['registrants', 'start_date', 'series_repeat', 'repeats_on', 'notify_registrants', 'zoom_id'])) {
                 update_field($field, $value, $event->ID);
                 wp_update_post(['post_title' => get_the_title($post_id), 'ID' => $event->ID]);
               }

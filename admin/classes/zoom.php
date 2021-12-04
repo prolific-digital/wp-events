@@ -233,11 +233,15 @@ class Zoom {
         }
 
         // Check to see if date is before Today; if it is, skip.
-        if ($date_time[0]->format(get_option('date_format')) < date(get_option('date_format'))) {
+        if (strtotime($date_time[0]->format(get_option('date_format'))) < strtotime(date(get_option('date_format')))) {
           continue;
         }
 
-        $registrants = $this->buildRegistrantsList($meeting['id']);
+        if (!empty($meeting['parent_id'])){
+          $registrants = $this->buildRegistrantsList($meeting['parent_id'], $meeting['id']);
+        } else {
+          $registrants = $this->buildRegistrantsList($meeting['id']);
+        }
 
         $args = [
           'post_type' => 'events',
@@ -246,7 +250,7 @@ class Zoom {
         ];
         $meta_args = [
           'zoom_id' => $zoom_id,
-          'parent_id' => array_key_exists('parent_id', $meeting) ? $meeting['parent_id'] : '',
+          'series_id' => array_key_exists('parent_id', $meeting) ? $meeting['parent_id'] : '',
           'description' => $meeting['agenda'],
           'zoom_url' => $meeting['join_url'],
           'registrants' => $registrants ? $registrants : '',
@@ -290,18 +294,17 @@ class Zoom {
   }
 
   protected function buildRegistrantsList($meeting_id, $occurrence_id = null, $next_page = null) {
-    if (get_field('parent_id', $meeting_id)) {
-      $occurrence_id = $meeting_id;
-      $meeting_id = $parent_id;
-    }
     $registrantsQuery = $this->getMeetingRegistrants($meeting_id, $occurrence_id, $next_page);
     $registrantsEmails = [];
-    if ($registrantsQuery) {
+    if(array_key_exists('message', $registrantsQuery)){
+      $no_registration = strpos($registrantsQuery->message, 'not been enabled');
+    }
+    if (!$no_registration && $registrantsQuery) {
       foreach ($registrantsQuery->registrants as $registrant) {
         array_push($registrantsEmails, $registrant->email);
       };
       if ($registrantsQuery->next_page_token) {
-        $this->buildRegistrantsList($meeting_id, $registrants->next_page_token);
+        $this->buildRegistrantsList($meeting_id, $occurrence_id, $registrants->next_page_token);
       }
     }
     // Return list as a CSV
