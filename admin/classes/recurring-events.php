@@ -37,7 +37,7 @@ class Recurring_Event {
 
     $args = array(
       'FREQ' => $post_meta['series_repeat'],
-      'UNTIL' => $post_meta['end_series'],
+      'UNTIL' => (int)$post_meta['end_series']+1,
     );
 
     $weekdays = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
