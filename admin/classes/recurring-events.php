@@ -313,17 +313,19 @@ class Recurring_Event {
       foreach ($old_categories as $category) {
         array_push($new_categories, $category->term_id);
       }
-      wp_set_post_categories($event_id, $new_categories);
     }
     if ($old_tags) {
       foreach ($old_tags as $tag) {
         array_push($new_tags, $tag->name);
       }
-      wp_set_post_tags($event_id, $new_tags);
     }
     if (get_post_thumbnail_id($post_id)) {
       set_post_thumbnail($event_id, get_post_thumbnail_id($post_id));
+    } else {
+      delete_post_thumbnail($event_id);
     }
+    wp_set_post_categories($event_id, $new_categories);
+    wp_set_post_tags($event_id, $new_tags);
     return;
   }
 
