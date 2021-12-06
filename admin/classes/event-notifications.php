@@ -18,15 +18,16 @@ class EventNotifications {
       foreach ($events as $event) {
         $post_id = $event->ID;
         $registrants = get_field('registrants', $event->ID);
-
+        $event_url = get_field('zoom_url', $post_id) ? get_field('zoom_url', $post_id) : get_field('registration_link', $post_id);
         // If there are any registrants, send an email to them.
         if ($registrants) {
           $date = new DateTime(get_field('start_date', $post_id, true));
           $subject = $topic;
           $body =
           '<h1>' . get_the_title($post_id) . '</h1>' .
-          '<h2 class="start_date">' . $date->format("l F d, Y") . ' @ ' . get_field('start_time', $post_id, true) .'</h2>' .
+          '<h2 class="start_date">' . $date->format("l F d, Y") .(get_field('start_time', $post_id, true) ? ' @ ' . get_field('start_time', $post_id, true) : "")  . '</h2>' .
           '<p>' . get_field('description', $post_id, true) . '</p>' .
+          "<p><a href='$event_url'>Click here to join event</a></p>" .
           '<p><a href="' . get_permalink($post_id) . '">View Event</a></p>';
 
           $headers = array(

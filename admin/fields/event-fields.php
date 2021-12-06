@@ -356,28 +356,6 @@ if (function_exists('acf_add_local_field_group')) :
         'disabled' => 1,
       ),
       array(
-        'key' => 'field_619076580f2ff',
-        'label' => 'Zoom Join URL',
-        'name' => 'zoom_join_url',
-        'type' => 'url',
-        'instructions' => '',
-        'required' => 0,
-        'conditional_logic' => array(array(
-          array(
-            'field' => 'field_619076240f2fb',
-            'operator' => '!=empty',
-          ),
-        )),
-        'wrapper' => array(
-          'width' => '',
-          'class' => 'hidden',
-          'id' => '',
-        ),
-        'default_value' => '',
-        'placeholder' => '',
-        'disabled' => 1,
-      ),
-      array(
         'key' => 'field_619076400f2fc',
         'label' => 'Parent ID',
         'name' => 'parent_id',
