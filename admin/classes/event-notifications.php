@@ -25,7 +25,7 @@ class EventNotifications {
           $subject = $topic;
           $body =
           '<h1>' . get_the_title($post_id) . '</h1>' .
-          '<h2 class="start_date">' . $date->format("l F d, Y") .(get_field('start_time', $post_id, true) ? ' @ ' . get_field('start_time', $post_id, true) : "")  . '</h2>' .
+          '<h2 class="start_date">' . $date->format("l F d, Y") . (get_field('start_time', $post_id, false) ? ' @ ' . get_field('start_time', $post_id, false) : "")  . '</h2>' .
           '<p>' . get_field('description', $post_id, true) . '</p>' .
           "<p><a href='$event_url'>Click here to join event</a></p>" .
           '<p><a href="' . get_permalink($post_id) . '">View Event</a></p>';
