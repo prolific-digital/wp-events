@@ -305,7 +305,7 @@ class Recurring_Event {
   }
 
   protected function update_metadata_fields($post_id, $event_id) {
-    $old_categories = get_the_category($post_id);
+    $old_categories = get_the_terms($post_id, 'topic');
     $new_categories = [];
     $old_tags = get_the_tags($post_id);
     $new_tags = [];
@@ -313,7 +313,7 @@ class Recurring_Event {
       foreach ($old_categories as $category) {
         array_push($new_categories, $category->term_id);
       }
-      wp_set_post_categories($event_id, $new_categories);
+      wp_set_post_terms($event_id, $new_categories, 'topic');
     }
     if ($old_tags) {
       foreach ($old_tags as $tag) {

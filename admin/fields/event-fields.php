@@ -211,7 +211,7 @@ if (function_exists('acf_add_local_field_group')) :
       ),
       array(
         'key' => 'field_619070e138d40',
-        'label' => '',
+        'label' => 'Options',
         'name' => 'repeats_on_monthly_custom',
         'type' => 'checkbox',
         'instructions' => '',
