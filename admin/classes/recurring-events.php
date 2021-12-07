@@ -307,15 +307,23 @@ class Recurring_Event {
   }
 
   protected function update_metadata_fields($post_id, $event_id) {
-    $old_categories = get_the_terms($post_id, 'topic');
-    $new_categories = [];
+    $old_topics = get_the_terms($post_id, 'topic');
+    $new_topics = [];
     $old_tags = get_the_tags($post_id);
     $new_tags = [];
+    $old_categories = get_the_terms($post_id, 'category');
+    $new_categories = [];
+    if ($old_topics) {
+      foreach ($old_topics as $topic) {
+        array_push($new_topics, $topic->term_id);
+      }
+      wp_set_post_terms($event_id, $new_topics, 'topic');
+    }
     if ($old_categories) {
       foreach ($old_categories as $category) {
         array_push($new_categories, $category->term_id);
       }
-      wp_set_post_terms($event_id, $new_categories, 'topic');
+      wp_set_post_terms($event_id, $new_categories, 'category');
     }
     if ($old_tags) {
       foreach ($old_tags as $tag) {
@@ -327,7 +335,7 @@ class Recurring_Event {
     } else {
       delete_post_thumbnail($event_id);
     }
-    wp_set_post_categories($event_id, $new_categories);
+    wp_set_post_categories($event_id, $new_topics);
     wp_set_post_tags($event_id, $new_tags);
     return;
   }
