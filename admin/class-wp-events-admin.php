@@ -28,7 +28,8 @@ if (!class_exists('acf')) {
  * @subpackage Wp_Events/admin
  * @author     Prolific Digital <support@prolificdigital.com>
  */
-class Wp_Events_Admin {
+class Wp_Events_Admin
+{
 
 	/**
 	 * The ID of this plugin.
@@ -55,29 +56,77 @@ class Wp_Events_Admin {
 	 * @param      string    $plugin_name       The name of this plugin.
 	 * @param      string    $version    The version of this plugin.
 	 */
-	public function __construct($plugin_name, $version) {
+	public function __construct($plugin_name, $version)
+	{
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 		$this->define_hooks();
 	}
 
-	function my_acf_settings_url($url) {
+	function my_acf_settings_url($url)
+	{
 		return MY_ACF_URL;
 	}
 
-	function my_acf_settings_show_admin($show_admin) {
+	function my_acf_settings_show_admin($show_admin)
+	{
 		return true;
 	}
 
-	public function acf_read_only($field) {
-		$field['readonly'] = 1;
-		$field['disabled'] = true;
-		return $field;
-	}
-
-	protected function define_hooks(){
-		add_action('acf/input/admin_enqueue_scripts', function(){
+	protected function define_hooks()
+	{
+		add_action('acf/input/admin_enqueue_scripts', function () {
 			wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/wp-events-admin.js', array('jquery'), $this->version, false);
+		});
+		add_filter('acf/load_field/key=field_6191ae91bb5b0', function ($field) {
+			$post_info = get_fields();
+			if ($post_info) {
+				$start_day = (new DateTime($post_info['start_date']))->format('w');
+				$series_type = $post_info['series_repeat'];
+				$parent_id = $post_info['parent_id'];
+				$is_parent = (int)$parent_id == get_the_ID();
+				$message_init = "<p>This is a $series_type event";
+				$weekdays = ['SU'=>"Sunday", 'MO'=>"Monday", 'TU'=>"Tuesday", 'WE'=>"Wednesday", 'TH'=>"Thursday", 'FR'=>"Friday", 'SA'=>"Saturday"];
+				if (array_key_exists('repeats_on_monthly_custom', $post_info) && $post_info['repeats_on_monthly_custom']) {
+					$monthly = $post_info['repeats_on_monthly_custom'];
+					$ordinals = ['1st', '2nd', '3rd', '4th', '5th'];
+					$message_append = ' that repeats on the ';
+					foreach ($monthly as $key => $week) {
+						$ordinal = $ordinals[$week - 1];
+						if ($key === 0) {
+							$message_append .= $ordinal;
+						} else if (array_key_last($monthly) === $key) {
+							$message_append .= " and $ordinal";
+						} else {
+							$message_append .= ", $ordinal";
+						}
+					};
+					$message_append .= " " . array_values($weekdays)[$start_day] . " of the month";
+					$message_init .= $message_append;
+				}
+				if (array_key_exists('repeats_on_weekly', $post_info) && $post_info['repeats_on_weekly']) {
+					$weekly = $post_info['repeats_on_weekly'];
+					$message_append = ' that repeats on ';
+					foreach ($weekly as $key => $day) {
+						$weekday = $weekdays[$day];
+						if ($key === 0) {
+							$message_append .= $weekday;
+						} else if (array_key_last($weekly) === $key) {
+							$message_append .= " and $weekday";
+						} else {
+							$message_append .= ", $weekday";
+						}
+					};
+					$message_append .= ' each week';
+					$message_init .= $message_append;
+				}
+				if ($is_parent) {
+					$field['message'] = "$message_init. This is the initial event.";
+				} else {
+					$field['message'] = "$message_init. The initial event can be found <a href='http://demosite.local/wp-admin/post.php?post=$parent_id&action=edit'>here</a>.</p>";
+				}
+				return $field;
+			}
 		});
 	}
 
@@ -90,7 +139,8 @@ class Wp_Events_Admin {
 	 *
 	 * @return void
 	 */
-	public function events() {
+	public function events()
+	{
 		$labels = array(
 			'name'                  => _x('Events', 'Post Type General Name', 'text_domain'),
 			'singular_name'         => _x('Event', 'Post Type Singular Name', 'text_domain'),

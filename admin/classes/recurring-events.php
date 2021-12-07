@@ -35,15 +35,17 @@ class Recurring_Event {
 
     $post_meta = get_fields($post_id);
 
+    $end_date = (new DateTime($post_meta['end_series']))->modify('+1 day')->format("Ymd");
+
     $args = array(
       'FREQ' => $post_meta['series_repeat'],
-      'UNTIL' => $post_meta['end_series'],
+      'UNTIL' => (string)$end_date,
     );
 
     $weekdays = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
-    if (array_key_exists('repeats_on_weekly', $post_meta) && $post_meta['repeats_on']) {
-      $days = implode(',', $post_meta['repeats_on']);
+    if (array_key_exists('repeats_on_weekly', $post_meta) && $post_meta['repeats_on_weekly']) {
+      $days = implode(',', $post_meta['repeats_on_weekly']);
       $args['BYDAY'] = $days;
     }
     if (array_key_exists('repeats_on_monthly', $post_meta) && $post_meta['repeats_on_monthly']) {
@@ -61,7 +63,7 @@ class Recurring_Event {
     }
 
     $timezone    = 'America/New_York';
-    $startDate   = new \DateTime($post_meta['start_date'], new \DateTimeZone($timezone));
+    $startDate   = (new \DateTime($post_meta['start_date'], new \DateTimeZone($timezone)));
     $rule        = new \Recurr\Rule($args, $startDate, $timezone);
 
     $transformer = new \Recurr\Transformer\ArrayTransformer();
@@ -319,11 +321,14 @@ class Recurring_Event {
       foreach ($old_tags as $tag) {
         array_push($new_tags, $tag->name);
       }
-      wp_set_post_tags($event_id, $new_tags);
     }
     if (get_post_thumbnail_id($post_id)) {
       set_post_thumbnail($event_id, get_post_thumbnail_id($post_id));
+    } else {
+      delete_post_thumbnail($event_id);
     }
+    wp_set_post_categories($event_id, $new_categories);
+    wp_set_post_tags($event_id, $new_tags);
     return;
   }
 

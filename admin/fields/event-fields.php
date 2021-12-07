@@ -73,23 +73,22 @@ if (function_exists('acf_add_local_field_group')) :
         'return_format' => 'g:i a',
       ),
       array(
-        'key' => 'field_6191ae91bb5b5',
-        'label' => 'Repeating Events',
+        'key' => 'field_6191ae91bb5b0',
+        'label' => 'Series Information',
         'name' => '',
         'type' => 'message',
+        'message' => '',
         'instructions' => '',
         'required' => 0,
-        'message' => 'Meetings can only be set to repeat on creation. To change an event recurrence (e.g. weekly to monthly), create new series. You may want to delete the existing series.',
         'conditional_logic' => array(
           array(
             array(
-              'field' => 'field_61906f35eabe8',
-              'operator' => '!=',
-              'value' => 'none',
+              'field' => 'field_6190764c0f2fd',
+              'operator' => '!=empty',
             ),
             array(
-              'field' => 'field_619076240f2fb',
-              'operator' => '==empty',
+              'field' => 'field_619074b0cca49',
+              'operator' => '!=empty',
             ),
           ),
         ),
@@ -354,6 +353,7 @@ if (function_exists('acf_add_local_field_group')) :
         ),
         'default_value' => '',
         'placeholder' => '',
+        'disabled' => 1,
       ),
       array(
         'key' => 'field_619076400f2fc',
@@ -412,6 +412,7 @@ if (function_exists('acf_add_local_field_group')) :
         ),
         'default_value' => '',
         'placeholder' => '',
+        'disabled' => 1,
       ),
     ),
     'location' => array(
