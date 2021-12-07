@@ -317,13 +317,11 @@ class Recurring_Event {
       foreach ($old_topics as $topic) {
         array_push($new_topics, $topic->term_id);
       }
-      wp_set_post_terms($event_id, $new_topics, 'topic');
     }
     if ($old_categories) {
       foreach ($old_categories as $category) {
         array_push($new_categories, $category->term_id);
       }
-      wp_set_post_terms($event_id, $new_categories, 'category');
     }
     if ($old_tags) {
       foreach ($old_tags as $tag) {
@@ -335,7 +333,8 @@ class Recurring_Event {
     } else {
       delete_post_thumbnail($event_id);
     }
-    wp_set_post_categories($event_id, $new_topics);
+    wp_set_post_terms($event_id, $new_topics, 'topic');
+    wp_set_post_terms($event_id, $new_categories, 'category');
     wp_set_post_tags($event_id, $new_tags);
     return;
   }
