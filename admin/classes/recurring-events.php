@@ -365,7 +365,11 @@ class Recurring_Event {
     // If there are registrants, append email to the end.
     $current_registrants = get_field('registrants', $post_id);
     $updated_registrants_csv =  empty($current_registrants) ? $email : "$current_registrants, $email";
-    update_field('registrants', $updated_registrants_csv, $post_id);
+    $update = update_field('registrants', $updated_registrants_csv, $post_id);
+    if ($update) {
+      $events = [(object)['ID' => $post_id]];
+      EventNotifications::send_mail($events, "Thank you for registering!", $email);
+    }
     return;
   }
 
