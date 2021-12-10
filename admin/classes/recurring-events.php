@@ -368,7 +368,7 @@ class Recurring_Event {
     $update = update_field('registrants', $updated_registrants_csv, $post_id);
     if ($update) {
       $events = [(object)['ID' => $post_id]];
-      EventNotifications::send_mail($events, "Thank you for registering!", $email);
+      EventNotifications::send_mail($events, "Thank You For Registering", "You're confirmed for the following event:", $email);
     }
     return;
   }
