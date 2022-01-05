@@ -238,35 +238,38 @@ class Recurring_Event {
         ),
       );
 
+      $this_event_only = $_POST['update_single_event'] && $_POST['update_single_event'] === '1';
+
       $events = get_posts($args);
       $new_end_series = strtotime($post_meta['end_series']);
       $previous_end_series = strtotime($this->previous_end_series);
 
       // Removing the hook to prevent an infinite loop.
-      remove_action('save_post', [$this, 'update_series']);
-
-      if ($previous_end_series != null && $new_end_series > $previous_end_series) {
-        $this->extend_series($post_id);
-      } else {
-        // Updates all events to match changes on all fields except:
-        // [registrants, start_date, series_repeat, repeats_on]
-        foreach ($events as $event) {
-          if (!get_field('zoom_id', $event->ID) && $new_end_series <= strtotime(get_field('start_date', $event->ID))) {
-            wp_delete_post($event->ID);
-          } else {
-            $this->update_metadata_fields($post_id, $event->ID);
-            foreach ($post_meta as $field => $value) {
-              if (!in_array($field, ['registrants', 'start_date', 'series_repeat', 'repeats_on', 'notify_registrants', 'zoom_id'])) {
-                update_field($field, $value, $event->ID);
-                wp_update_post(['post_title' => get_the_title($post_id), 'ID' => $event->ID]);
+      if (!$this_event_only) {
+        remove_action('save_post', [$this, 'update_series']);
+        if ($previous_end_series != null && $new_end_series > $previous_end_series) {
+          $this->extend_series($post_id);
+        } else {
+          // Updates all events to match changes on all fields except:
+          // [registrants, start_date, series_repeat, repeats_on]
+          foreach ($events as $event) {
+            if (!get_field('zoom_id', $event->ID) && $new_end_series <= strtotime(get_field('start_date', $event->ID))) {
+              wp_delete_post($event->ID);
+            } else {
+              $this->update_metadata_fields($post_id, $event->ID);
+              foreach ($post_meta as $field => $value) {
+                if (!in_array($field, ['registrants', 'start_date', 'series_repeat', 'repeats_on', 'notify_registrants', 'zoom_id'])) {
+                  update_field($field, $value, $event->ID);
+                  wp_update_post(['post_title' => get_the_title($post_id), 'ID' => $event->ID]);
+                }
               }
             }
           }
         }
-      }
 
-      // Adding the hook back.
-      add_action('save_post', [$this, 'update_series']);
+        // Adding the hook back.
+        add_action('save_post', [$this, 'update_series']);
+      }
     }
 
     return $post_id;

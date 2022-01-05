@@ -197,6 +197,19 @@ class Wp_Events {
 		$this->loader->add_action('save_post', $recurring_events, 'update_series');
 		$this->loader->add_action('save_post', $recurring_events, 'create_series');
 
+		// Add checkbox to Publish Meta Box if the event is published AND has an associated series
+		add_action('post_submitbox_misc_actions', function () {
+			global $post;
+			$post_type = 'events'; // If you want a specific post type
+
+			if ($post_type == $post->post_type &&
+					$post->post_status === "publish" &&
+					get_field('series_repeat') !== "none") {
+				echo  '<div class="misc-pub-section misc-pub-section-last update-single-event">'
+					. '<label><input type="checkbox" value="1" name="update_single_event" /> Update <b>only</b> this event.<br /> <em>All other events in this series will be unchanged.</em></label>'
+					. '</div>';
+			}
+		});
 		if (!class_exists('acf')) {
 			// Customize the url setting to fix incorrect asset URLs.
 			$this->loader->add_filter('acf/settings/url', $plugin_admin, 'my_acf_settings_url');

@@ -16,7 +16,7 @@
  * Plugin Name:       WP Events
  * Plugin URI:        https://prolificdigital.com
  * Description:       Create and display events on your site.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Author:            Prolific Digital
  * Author URI:        https://prolificdigital.com
  * License:           GPL-2.0+
